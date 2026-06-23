@@ -81,13 +81,11 @@
       </div>
     </div>
 
-    <!-- Bottom links -->
-    <div class="border-t border-outline-variant/30 p-2 flex gap-2">
-      <button class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded transition-all">
-        <span class="material-symbols-outlined text-[14px]">settings</span>
-      </button>
-      <button class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded transition-all">
-        <span class="material-symbols-outlined text-[14px]">help</span>
+    <!-- Theme toggle -->
+    <div class="border-t border-outline-variant/30 p-2">
+      <button @click="cycleTheme" class="w-full flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded transition-all" :title="'Theme: ' + theme">
+        <span class="material-symbols-outlined text-[16px]">{{ themeIcon }}</span>
+        <span class="capitalize">{{ themeLabel }}</span>
       </button>
     </div>
   </aside>
@@ -95,7 +93,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { activeView, selectedConnectionId, selectedTable, connections, loadConnections } from '@/store/app'
+import { activeView, selectedConnectionId, selectedTable, connections, loadConnections, theme } from '@/store/app'
 import { schemasApi, type TableInfo } from '@/api/schemas'
 
 const tables = ref<TableInfo[]>([])
@@ -117,5 +115,19 @@ watch(selectedConnectionId, (id) => {
 function goToTable(tableName: string) {
   selectedTable.value = tableName
   activeView.value = 'tables'
+}
+
+const themeIcon = computed(() =>
+  theme.value === 'dark' ? 'dark_mode' : theme.value === 'light' ? 'light_mode' : 'contrast'
+)
+
+const themeLabel = computed(() =>
+  theme.value === 'dark' ? 'Dark' : theme.value === 'light' ? 'Light' : 'System'
+)
+
+function cycleTheme() {
+  const modes: Array<'light' | 'system' | 'dark'> = ['system', 'dark', 'light']
+  const idx = modes.indexOf(theme.value)
+  theme.value = modes[(idx + 1) % modes.length]
 }
 </script>
