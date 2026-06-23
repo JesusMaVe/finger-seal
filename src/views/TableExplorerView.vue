@@ -29,9 +29,9 @@
               <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-spin': loading }">refresh</span>
               <span>{{ loading ? 'Loading...' : 'Refresh' }}</span>
            </button>
-           <button @click="exportCSV" :disabled="!previewData.length" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface disabled:opacity-50">
-              <span class="material-symbols-outlined text-[18px]">download</span>
-              Export
+           <button @click="exportCSV" :disabled="!previewData.length" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface disabled:opacity-50 min-w-[90px] justify-center">
+              <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-bounce': exporting }">{{ exporting ? 'downloading' : 'download' }}</span>
+              <span>{{ exporting ? 'Downloading' : 'Export' }}</span>
            </button>
            <button @click="queryTable"
   class="bg-primary text-on-primary px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-bold shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
@@ -244,6 +244,12 @@
        </div>
      </div>
   </div>
+
+  <!-- Toast notification -->
+  <div v-if="toastMsg" class="fixed bottom-6 right-6 bg-on-surface text-surface px-4 py-2.5 rounded-lg shadow-xl text-body-sm font-medium flex items-center gap-2 z-50 animate-toast">
+    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+    {{ toastMsg }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -268,6 +274,8 @@ const tabs = [
 type TabId = (typeof tabs)[number]['id']
 const currentTab = ref<TabId>('schema')
 const dataView = ref<'table' | 'json'>('table')
+const exporting = ref(false)
+const toastMsg = ref('')
 
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 
@@ -352,22 +360,32 @@ async function refresh() {
 
 function exportCSV() {
   if (!previewData.value.length || !selectedTable.value) return
-  const rows = previewData.value
-  const cols = previewColumns.value
-  if (!cols.length) return
+  exporting.value = true
+  toastMsg.value = ''
 
-  const csv = [
-    cols.map(escapeCsv).join(','),
-    ...rows.map(r => cols.map(c => escapeCsv(String(r[c] ?? ''))).join(',')),
-  ].join('\n')
+  // Small delay so the UI updates before the synchronous CSV gen
+  setTimeout(() => {
+    const rows = previewData.value
+    const cols = previewColumns.value
+    if (!cols.length) { exporting.value = false; return }
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+    const csv = [
+      cols.map(escapeCsv).join(','),
+      ...rows.map(r => cols.map(c => escapeCsv(String(r[c] ?? ''))).join(',')),
+    ].join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    exporting.value = false
+    toastMsg.value = `${selectedTable.value}.csv downloaded`
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  }, 100)
 }
 
 function escapeCsv(val: string): string {
