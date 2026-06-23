@@ -1,21 +1,34 @@
 <template>
   <div class="flex-1 flex flex-col overflow-hidden bg-surface-container-lowest h-full">
+    <!-- Selectors -->
+    <div class="flex items-center gap-md px-md py-sm bg-surface border-b border-outline-variant shrink-0">
+      <select v-model="selectedConnectionId" class="bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none">
+        <option :value="null" disabled>Select connection...</option>
+        <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }}</option>
+      </select>
+      <select v-model="selectedTable" @change="selectTable(selectedTable)" class="bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none" :disabled="!selectedConnectionId || tables.length === 0">
+        <option value="" disabled>Select table...</option>
+        <option v-for="t in tables" :key="t.table_name" :value="t.table_name">{{ t.table_name }}</option>
+      </select>
+      <span v-if="loading" class="text-code-sm text-outline animate-pulse">Loading...</span>
+    </div>
+
     <!-- Header Section -->
      <div class="flex flex-col gap-md p-md bg-surface border-b border-outline-variant shrink-0 relative z-10">
       <div class="flex justify-between items-end">
         <div>
            <div class="flex items-center gap-xs text-outline mb-1 font-body-sm text-[12px]">
-             <span>public</span>
+             <span>{{ selectedConnectionId ? (connections.find(c => c.id === selectedConnectionId)?.name || 'DB') : 'No connection' }}</span>
              <span class="material-symbols-outlined text-[14px]">chevron_right</span>
              <span>tables</span>
            </div>
            <h1 class="font-headline-lg text-[28px] font-bold text-on-surface flex items-center gap-sm">
              <span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1;">table_chart</span>
-             users
+             {{ selectedTable || 'Select a table' }}
            </h1>
         </div>
         <div class="flex gap-sm">
-           <button class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface">
+           <button @click="refresh" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface">
               <span class="material-symbols-outlined text-[18px]">refresh</span>
               Refresh
            </button>
@@ -54,29 +67,27 @@
 
      <!-- Bento Grid Content -->
      <div class="flex-1 overflow-y-auto custom-scrollbar p-md bg-surface-container-lowest">
-       <div class="grid grid-cols-12 gap-md h-fit max-w-[1400px] mx-auto">
-         
+       <div v-if="!selectedConnectionId" class="flex items-center justify-center h-64 text-on-surface-variant font-body-md">
+         Select a connection and table to view schema.
+       </div>
+       <div v-else class="grid grid-cols-12 gap-md h-fit max-w-[1400px] mx-auto">
+
          <!-- Columns/Schema Definition Panel -->
          <div class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col min-h-[400px]">
            <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
               <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Columns</h3>
               <div class="flex items-center gap-sm">
-                <span class="text-code-sm text-outline">12 Columns total</span>
-                <div class="w-[1px] h-4 bg-outline-variant mx-1"></div>
-                <button class="text-primary hover:underline text-body-sm font-bold flex items-center gap-xs">
-                  <span class="material-symbols-outlined text-[16px]">add</span>
-                  Add Column
-                </button>
+                <span class="text-code-sm text-outline">{{ columns.length }} Columns total</span>
               </div>
            </div>
-           
+
            <div class="overflow-x-auto flex-1 bg-surface-container-lowest">
-              <table class="w-full text-left border-collapse">
+              <table v-if="columns.length" class="w-full text-left border-collapse">
                 <thead class="bg-surface-container-low text-label-caps text-outline uppercase border-b border-outline-variant">
                   <tr>
                     <th class="px-md py-sm font-bold">Name</th>
                     <th class="px-md py-sm font-bold">Type</th>
-                    <th class="px-md py-sm font-bold">Constraint</th>
+                    <th class="px-md py-sm font-bold">Size</th>
                     <th class="px-md py-sm font-bold">Nullable</th>
                     <th class="px-md py-sm font-bold">Default</th>
                     <th class="px-md py-sm font-bold text-center">Actions</th>
@@ -84,51 +95,52 @@
                 </thead>
                 <tbody class="font-code-md divide-y divide-outline-variant/40">
                   <tr v-for="(col, i) in columns" :key="i" class="hover:bg-surface-container-low transition-colors group">
-                     <td class="px-md py-sm text-on-surface">{{ col.name }}</td>
+                     <td class="px-md py-sm text-on-surface font-code-sm">{{ col.name }}</td>
                      <td class="px-md py-sm">
                         <span class="px-2 py-0.5 rounded-sm bg-surface text-[11px] border border-outline-variant/30 text-on-surface-variant font-code-sm">{{ col.type }}</span>
                      </td>
-                     <td class="px-md py-sm flex items-center gap-1 font-body-sm text-[12px] h-full pt-3">
-                        <span v-if="col.constraintIcon" class="material-symbols-outlined text-[16px]" :class="col.color" style="font-variation-settings: 'FILL' 1;">{{ col.constraintIcon }}</span>
-                        <span :class="col.constraint ? 'text-on-surface' : 'text-outline'">{{ col.constraint || '-' }}</span>
-                     </td>
+                     <td class="px-md py-sm text-on-surface-variant font-body-sm text-[12px]">{{ col.size || '-' }}</td>
                      <td class="px-md py-sm font-body-md text-[13px]" :class="col.nullable === 'NO' ? 'text-error font-bold' : 'text-on-surface-variant'">{{ col.nullable }}</td>
-                     <td class="px-md py-sm text-outline-variant italic group-hover:text-outline transition-colors">{{ col.defaultVal }}</td>
+                     <td class="px-md py-sm text-outline-variant italic group-hover:text-outline transition-colors font-code-sm">{{ col.default || '-' }}</td>
                      <td class="px-md py-sm text-center">
                         <button class="material-symbols-outlined text-outline-variant hover:text-primary transition-colors cursor-pointer text-[20px]">more_vert</button>
                      </td>
                   </tr>
                 </tbody>
               </table>
+              <div v-else-if="!loading" class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">No columns found</div>
            </div>
          </div>
 
          <!-- Statistics & Health Panel -->
          <div class="col-span-12 lg:col-span-4 flex flex-col gap-md">
-           
+
            <!-- Table Insights -->
            <div class="bg-surface-container-low border border-outline-variant rounded-xl p-md">
              <h3 class="font-headline-md text-[16px] font-bold text-on-surface mb-md flex items-center gap-xs">
                 <span class="material-symbols-outlined text-outline text-[20px]">analytics</span>
                 Table Insights
              </h3>
-             <div class="grid grid-cols-2 gap-sm">
+             <div v-if="selectedTable" class="grid grid-cols-2 gap-sm">
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Total Rows</p>
-                   <p class="font-headline-md text-[20px] text-primary">124,802</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.row_count ?? '-' }}</p>
                 </div>
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Table Size</p>
-                   <p class="font-headline-md text-[20px] text-primary">42.5 MB</p>
-                </div>
-                <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
-                   <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Index Size</p>
-                   <p class="font-headline-md text-[20px] text-primary">18.2 MB</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.total_size ?? '-' }}</p>
                 </div>
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Avg Row Width</p>
-                   <p class="font-headline-md text-[20px] text-primary">248B</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.avg_row_width ?? '-' }}</p>
                 </div>
+                <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
+                   <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Index Size</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.index_size ?? '-' }}</p>
+                </div>
+             </div>
+             <div v-else class="flex items-center justify-center h-24 text-on-surface-variant font-body-sm italic">
+               Select a table to view insights
              </div>
            </div>
 
@@ -138,16 +150,8 @@
                  <span class="material-symbols-outlined text-outline text-[20px]">history</span>
                  Activity Log
               </h3>
-              <div class="flex flex-col gap-md overflow-y-auto custom-scrollbar flex-1 relative">
-                 <div class="absolute left-1 top-2 bottom-2 w-[2px] bg-outline-variant/30"></div>
-                 <div v-for="(log, i) in activities" :key="i" class="flex gap-md relative z-10">
-                   <div class="w-2.5 h-2.5 rounded-full mt-1 border-2 border-surface-container-low shrink-0" :class="log.color"></div>
-                   <div>
-                     <p class="text-body-sm font-bold text-on-surface">{{ log.title }}</p>
-                     <p class="text-[11px] text-outline mt-0.5 leading-snug" v-html="log.desc"></p>
-                     <p class="text-[10px] text-outline-variant mt-1 font-body-sm italic">{{ log.time }}</p>
-                   </div>
-                 </div>
+              <div class="flex items-center justify-center h-full text-on-surface-variant font-body-sm italic">
+                No recent activity
               </div>
            </div>
          </div>
@@ -157,7 +161,7 @@
             <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
                <h3 class="font-headline-md text-[18px] font-bold text-on-surface flex items-center gap-xs">
                   <span class="material-symbols-outlined text-outline">table_rows</span>
-                  Data Preview <span class="text-outline font-body-md font-normal ml-xs">(Top 100)</span>
+                  Data Preview <span v-if="selectedTable" class="text-outline font-body-md font-normal ml-xs">(Top {{ previewData.length }})</span>
                </h3>
                <div class="flex items-center gap-sm">
                  <div class="flex rounded-sm border border-outline-variant overflow-hidden bg-surface-container-low">
@@ -166,54 +170,89 @@
                  </div>
                </div>
             </div>
-            
-            <div class="overflow-x-auto custom-scrollbar bg-surface-container-lowest">
+
+            <div v-if="previewData.length" class="overflow-x-auto custom-scrollbar bg-surface-container-lowest">
                <table class="w-full text-left border-collapse">
                  <thead class="bg-surface-container text-label-caps text-outline uppercase border-b border-outline-variant">
                    <tr>
-                     <th class="px-md py-xs font-bold border-r border-outline-variant/30">id</th>
-                     <th class="px-md py-xs font-bold border-r border-outline-variant/30">email</th>
-                     <th class="px-md py-xs font-bold border-r border-outline-variant/30">full_name</th>
-                     <th class="px-md py-xs font-bold border-r border-outline-variant/30">account_id</th>
-                     <th class="px-md py-xs font-bold border-r border-outline-variant/30">created_at</th>
-                     <th class="px-md py-xs font-bold">status</th>
+                     <th class="px-md py-xs font-bold border-r border-outline-variant/30">#</th>
+                     <th v-for="col in previewColumns" :key="col" class="px-md py-xs font-bold border-r border-outline-variant/30">{{ col }}</th>
                    </tr>
                  </thead>
                  <tbody class="font-code-sm text-on-surface-variant divide-y divide-outline-variant/20">
-                    <tr v-for="i in 5" :key="i" class="hover:bg-surface-variant transition-colors group cursor-pointer">
-                      <td class="px-md py-1 border-r border-outline-variant/20 group-hover:text-on-surface transition-colors">f47ac10b...</td>
-                      <td class="px-md py-1 border-r border-outline-variant/20 text-on-surface">j{{i}}.smith@example.com</td>
-                      <td class="px-md py-1 border-r border-outline-variant/20 font-body-sm text-[13px]">John Smith</td>
-                      <td class="px-md py-1 border-r border-outline-variant/20 text-on-surface text-right">100{{24+i}}</td>
-                      <td class="px-md py-1 border-r border-outline-variant/20 text-outline group-hover:text-on-surface-variant">2023-10-25 10:45</td>
-                      <td class="px-md py-1 flex items-center gap-2">
-                         <div class="w-2 h-2 rounded-full" :class="i===3?'bg-orange-400':'bg-emerald-500'"></div>
-                         <span class="font-body-sm text-[12px] text-on-surface">{{i===3?'Suspended':'Active'}}</span>
-                      </td>
+                    <tr v-for="(row, idx) in previewData" :key="idx" class="hover:bg-surface-variant transition-colors group cursor-pointer">
+                      <td class="px-md py-1 border-r border-outline-variant/20 text-outline group-hover:text-on-surface-variant">{{ idx + 1 }}</td>
+                      <td v-for="col in previewColumns" :key="col" class="px-md py-1 border-r border-outline-variant/20 group-hover:text-on-surface transition-colors">{{ row[col] ?? '' }}</td>
                     </tr>
                  </tbody>
                </table>
             </div>
+            <div v-else-if="selectedTable && !loading" class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">
+              No data available
+            </div>
          </div>
-         
+
        </div>
      </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const columns = [
-  { name: 'id', type: 'UUID', constraint: 'PK', constraintIcon: 'key', color: 'text-primary', nullable: 'NO', defaultVal: 'gen_random_uuid()' },
-  { name: 'email', type: 'VARCHAR(255)', constraint: 'UNIQUE', constraintIcon: '', color: '', nullable: 'NO', defaultVal: 'NULL' },
-  { name: 'full_name', type: 'TEXT', constraint: '', constraintIcon: '', color: '', nullable: 'YES', defaultVal: 'NULL' },
-  { name: 'account_id', type: 'INTEGER', constraint: 'FK', constraintIcon: 'link', color: 'text-outline', nullable: 'NO', defaultVal: '-' },
-  { name: 'created_at', type: 'TIMESTAMP', constraint: '', constraintIcon: '', color: '', nullable: 'NO', defaultVal: 'now()' },
-  { name: 'last_login', type: 'TIMESTAMP', constraint: '', constraintIcon: '', color: '', nullable: 'YES', defaultVal: 'NULL' },
-]
+import { ref, computed, watch, onMounted } from 'vue'
+import { schemasApi, type TableInfo, type ColumnInfo } from '@/api/schemas'
+import { connectionsApi, type ConnectionConfig } from '@/api/connections'
 
-const activities = [
-  { title: 'Schema updated', desc: 'Modified <span class="text-on-surface font-code-sm border border-outline-variant/30 rounded px-1 bg-surface">last_login</span> col by admin', time: '2 hours ago', color: 'bg-primary' },
-  { title: 'Bulk insert execution', desc: '5,000 rows added via API', time: 'Yesterday, 14:22', color: 'bg-outline-variant' },
-  { title: 'Index Rebuild', desc: 'Primary key re-indexed automatically', time: 'Oct 24, 09:10', color: 'bg-outline-variant' },
-]
+const connections = ref<ConnectionConfig[]>([])
+const selectedConnectionId = ref<number | null>(null)
+const tables = ref<TableInfo[]>([])
+const selectedTable = ref<string>('')
+const columns = ref<ColumnInfo[]>([])
+const previewData = ref<Record<string, unknown>[]>([])
+const tableStats = ref<Record<string, unknown>>({})
+const loading = ref(false)
+
+const previewColumns = computed(() =>
+  previewData.value.length > 0 ? Object.keys(previewData.value[0]) : []
+)
+
+onMounted(() => {
+  connectionsApi.list().then(data => connections.value = data).catch(() => {})
+})
+
+watch(selectedConnectionId, (id) => {
+  if (!id) return
+  selectedTable.value = ''
+  columns.value = []
+  previewData.value = []
+  tableStats.value = {}
+  schemasApi.listTables(id).then(data => tables.value = data).catch(() => {})
+})
+
+async function selectTable(tableName: string) {
+  if (!tableName || !selectedConnectionId.value) return
+  selectedTable.value = tableName
+  loading.value = true
+  try {
+    const [cols, data, stats] = await Promise.all([
+      schemasApi.tableColumns(selectedConnectionId.value, tableName),
+      schemasApi.tableData(selectedConnectionId.value, tableName, 100),
+      schemasApi.tableStats(selectedConnectionId.value, tableName),
+    ])
+    columns.value = cols
+    previewData.value = data
+    tableStats.value = stats
+  } catch {
+    columns.value = []
+    previewData.value = []
+    tableStats.value = {}
+  } finally {
+    loading.value = false
+  }
+}
+
+async function refresh() {
+  if (selectedTable.value && selectedConnectionId.value) {
+    await selectTable(selectedTable.value)
+  }
+}
 </script>
