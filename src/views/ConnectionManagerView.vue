@@ -6,9 +6,7 @@
           <h1 class="font-headline-lg text-headline-lg text-on-surface">Connection Manager</h1>
           <p class="font-body-md text-on-surface-variant text-body-md mt-xs">Configure access to your remote or local data sources.</p>
         </div>
-        <div class="flex gap-sm">
-          <span class="text-body-sm font-code-sm bg-surface-container px-sm py-1 rounded border border-outline-variant text-on-surface-variant">v2.4.1-stable</span>
-        </div>
+
       </div>
 
       <!-- Main Form Card -->
@@ -159,30 +157,7 @@
         </div>
       </section>
 
-      <!-- Bottom Status Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
-         <div class="bg-surface border border-outline-variant p-md rounded-lg flex flex-col justify-between">
-           <div>
-             <span class="material-symbols-outlined text-outline mb-xs">history</span>
-             <h4 class="font-bold text-on-surface text-body-md">Recent Sessions</h4>
-           </div>
-           <p class="text-body-sm text-on-surface-variant mt-sm">Last connected to <span class="text-on-surface font-code-sm">analytics_v3</span> 2 hours ago.</p>
-         </div>
-         <div class="bg-surface border border-outline-variant p-md rounded-lg flex flex-col justify-between">
-           <div>
-             <span class="material-symbols-outlined text-outline mb-xs">security</span>
-             <h4 class="font-bold text-on-surface text-body-md">Encryption</h4>
-           </div>
-           <p class="text-body-sm text-on-surface-variant mt-sm">SSL/TLS is enabled by default for all production hosts.</p>
-         </div>
-         <div class="bg-surface border border-outline-variant p-md rounded-lg flex flex-col justify-between">
-           <div>
-             <span class="material-symbols-outlined text-outline mb-xs">sync</span>
-             <h4 class="font-bold text-on-surface text-body-md">Cloud Sync</h4>
-           </div>
-           <p class="text-body-sm text-on-surface-variant mt-sm">Connection settings are encrypted and synced to your profile.</p>
-         </div>
-      </div>
+
     </div>
   </div>
 </template>
