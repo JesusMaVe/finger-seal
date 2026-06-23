@@ -25,9 +25,9 @@
            </h1>
         </div>
         <div class="flex gap-sm">
-           <button @click="refresh" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface">
-              <span class="material-symbols-outlined text-[18px]">refresh</span>
-              Refresh
+           <button @click="refresh" :disabled="loading" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface disabled:opacity-50">
+              <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-spin': loading }">refresh</span>
+              <span>{{ loading ? 'Loading...' : 'Refresh' }}</span>
            </button>
            <button class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface">
               <span class="material-symbols-outlined text-[18px]">download</span>
