@@ -117,7 +117,7 @@
               </tr>
             </thead>
             <tbody class="font-body-sm">
-              <tr v-if="connected" class="border-b border-outline-variant/30 bg-surface/50">
+              <tr v-if="wsConnected" class="border-b border-outline-variant/30 bg-surface/50">
                 <td colspan="5" class="px-md py-2 text-center">
                   <span class="inline-flex items-center gap-2 text-code-sm text-primary">
                     <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
@@ -125,14 +125,14 @@
                   </span>
                 </td>
               </tr>
-              <tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/40 transition-colors cursor-pointer group" v-for="(log, i) in logs" :key="i">
+              <tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/40 transition-colors cursor-pointer group" v-for="(log, i) in wsLogs" :key="i">
                 <td class="px-md py-2 font-code-sm text-code-sm text-outline group-hover:text-on-surface-variant transition-colors">{{ new Date(log.timestamp).toLocaleTimeString() }}</td>
                 <td class="px-md py-2 font-body-sm text-on-surface">conn-{{ log.connectionId }}</td>
                 <td class="px-md py-2 font-code-sm text-code-sm text-primary/80 group-hover:text-primary transition-colors truncate max-w-[200px]">{{ log.sql }}</td>
                 <td class="px-md py-2 font-code-sm text-code-sm text-right text-on-surface-variant">{{ log.elapsedMs }}ms</td>
                 <td class="px-md py-2 font-code-sm text-code-sm text-right font-bold" :class="log.status === 'ERROR' ? 'text-error' : 'text-on-surface'">{{ log.rows ?? '-' }}</td>
               </tr>
-              <tr v-if="!logs.length && !connected">
+              <tr v-if="!wsLogs.length && !wsConnected">
                 <td colspan="5" class="px-md py-4 text-center text-on-surface-variant font-body-sm italic">Not connected — start the backend</td>
               </tr>
             </tbody>
@@ -144,22 +144,5 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { connections } from '@/store/app'
-import { useWebSocket, type QueryEvent } from '@/composables/useWebSocket'
-
-const logs = ref<QueryEvent[]>([])
-
-// ponytail: dev uses Vite proxy, prod/Tauri connects to backend port directly
-const wsUrl = window.location.port === '3000'
-  ? `ws://${window.location.host}/ws/events`
-  : `ws://localhost:8080/ws/events`
-const { connected, lastEvent } = useWebSocket(wsUrl)
-
-watch(lastEvent, (ev) => {
-  if (ev && ev.type === 'query') {
-    logs.value.unshift(ev)
-    if (logs.value.length > 50) logs.value.pop()
-  }
-})
+import { connections, wsConnected, wsLogs } from '@/store/app'
 </script>

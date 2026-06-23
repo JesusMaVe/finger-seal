@@ -29,3 +29,43 @@ export function loadConnections() {
     }
   }).catch(() => {})
 }
+
+/* ── WebSocket event bus (persists across view switches) ── */
+export interface QueryEvent {
+  type: 'query'
+  connectionId: number
+  sql: string
+  status: string
+  elapsedMs: number
+  rows: number | null
+  error: string | null
+  timestamp: number
+}
+
+export const wsConnected = ref(false)
+export const wsLogs = ref<QueryEvent[]>([])
+
+const wsUrl = window.location.port === '3000'
+  ? `ws://${window.location.host}/ws/events`
+  : `ws://localhost:8080/ws/events`
+let ws: WebSocket | null = null
+
+function connectWs() {
+  try {
+    ws = new WebSocket(wsUrl)
+    ws.onopen = () => { wsConnected.value = true }
+    ws.onclose = () => { wsConnected.value = false }
+    ws.onerror = () => { wsConnected.value = false }
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as QueryEvent
+        if (data.type === 'query') {
+          wsLogs.value.unshift(data)
+          if (wsLogs.value.length > 50) wsLogs.value.pop()
+        }
+      } catch {}
+    }
+  } catch {}
+}
+
+connectWs()
