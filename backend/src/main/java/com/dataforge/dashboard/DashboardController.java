@@ -3,12 +3,15 @@ package com.dataforge.dashboard;
 import com.dataforge.connection.ConnectionConfig;
 import com.dataforge.connection.ConnectionRepository;
 import com.dataforge.query.DataSourceManager;
+import com.dataforge.query.QueryHistory;
+import com.dataforge.query.QueryHistoryRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/connections/{id}")
@@ -16,12 +19,12 @@ public class DashboardController {
 
     private final ConnectionRepository connectionRepo;
     private final DataSourceManager dataSourceManager;
-    private final JdbcTemplate configJdbc;
+    private final QueryHistoryRepository historyRepo;
 
-    public DashboardController(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, JdbcTemplate configJdbc) {
+    public DashboardController(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
-        this.configJdbc = configJdbc;
+        this.historyRepo = historyRepo;
     }
 
     @GetMapping("/metrics")
@@ -114,31 +117,19 @@ public class DashboardController {
             m.put("storageBreakdown", Collections.emptyList());
         }
 
-        // Query intensity: last 28 days from query history (H2 config DB)
+        // Query intensity: last 28 days from query history (H2 via repository)
         try {
-            List<Map<String, Object>> rawDays = configJdbc.query(
-                "SELECT CAST(created_at AS DATE) AS day, COUNT(*) AS cnt FROM query_history WHERE connection_id = ? AND created_at >= CURRENT_DATE - 27 GROUP BY CAST(created_at AS DATE) ORDER BY day",
-                (rs, i) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("day", rs.getDate("day").toLocalDate().toString());
-                    row.put("cnt", rs.getInt("cnt"));
-                    return row;
-                },
-                id
-            );
-            // Build 28-day array with 0 for missing days
-            List<Map<String, Object>> intensity = new ArrayList<>(28);
+            List<QueryHistory> all = historyRepo.findByConnectionIdOrderByCreatedAtDesc(id);
             LocalDate today = LocalDate.now();
-            Map<String, Integer> dayMap = new HashMap<>();
-            for (Map<String, Object> r : rawDays) {
-                dayMap.put((String) r.get("day"), (Integer) r.get("cnt"));
-            }
+            Map<LocalDate, Long> dayCounts = all.stream()
+                .filter(h -> h.getCreatedAt() != null)
+                .collect(Collectors.groupingBy(h -> h.getCreatedAt().toLocalDate(), Collectors.counting()));
+            List<Map<String, Object>> intensity = new ArrayList<>(28);
             for (int i = 27; i >= 0; i--) {
                 LocalDate d = today.minusDays(i);
-                String dayStr = d.toString();
                 Map<String, Object> entry = new LinkedHashMap<>();
-                entry.put("day", dayStr);
-                entry.put("count", dayMap.getOrDefault(dayStr, 0));
+                entry.put("day", d.toString());
+                entry.put("count", dayCounts.getOrDefault(d, 0L).intValue());
                 intensity.add(entry);
             }
             m.put("queryIntensity", intensity);
