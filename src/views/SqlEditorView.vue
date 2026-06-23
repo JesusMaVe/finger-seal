@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
 import { connections, loadConnections, selectedConnectionId } from '@/store/app'
 

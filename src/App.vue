@@ -12,10 +12,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
-import { activeView } from './store/app'
+import { activeView, theme, applyTheme } from './store/app'
+
+onMounted(() => applyTheme(theme.value))
+watch(theme, applyTheme)
 
 import DashboardView from './views/DashboardView.vue'
 import ConnectionManagerView from './views/ConnectionManagerView.vue'
