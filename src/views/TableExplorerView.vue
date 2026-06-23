@@ -121,19 +121,19 @@
              <div v-if="selectedTable" class="grid grid-cols-2 gap-sm">
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Total Rows</p>
-                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.row_count ?? '-' }}</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.row_count ?? tableStats.TABLE_ROWS ?? tableStats.COUNT ?? '-' }}</p>
                 </div>
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Table Size</p>
-                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.total_size ?? '-' }}</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.total_size ?? tableStats.total_size_mb ?? '-' }}</p>
                 </div>
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Avg Row Width</p>
-                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.avg_row_width ?? '-' }}</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.avg_row_width ?? tableStats.avg_row_len ?? '-' }}</p>
                 </div>
                 <div class="bg-surface p-sm rounded-lg border border-outline-variant/60">
                    <p class="text-label-caps text-outline uppercase text-[10px] tracking-wide mb-1">Index Size</p>
-                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.index_size ?? '-' }}</p>
+                   <p class="font-headline-md text-[20px] text-primary">{{ tableStats.index_size ?? tableStats.index_size_mb ?? '-' }}</p>
                 </div>
              </div>
              <div v-else class="flex items-center justify-center h-24 text-on-surface-variant font-body-sm italic">
