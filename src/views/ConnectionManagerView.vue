@@ -13,13 +13,15 @@
 
       <!-- Main Form Card -->
       <section class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg shadow-black/5 overflow-hidden flex flex-col md:flex-row">
-        
+
         <!-- Left Sidebar Type List -->
         <div class="w-full md:w-1/3 bg-surface-container-low border-r border-outline-variant p-lg flex flex-col gap-md shrink-0">
           <h3 class="font-label-caps text-label-caps text-on-surface-variant">DATABASE TYPE</h3>
-          
+
           <div class="space-y-sm">
-            <button class="w-full text-left flex items-start gap-md p-md rounded-lg border-2 border-primary bg-primary-container/[0.05] transition-all group">
+            <button @click="selectDbType('POSTGRESQL')"
+              class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
+              :class="form.dbType === 'POSTGRESQL' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
               <div class="w-10 h-10 shrink-0 rounded bg-surface border border-outline-variant/30 flex items-center justify-center p-2 mt-0.5">
                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuADlqvHo3XphVkpQ-yR-1CrxlH8MfA_OJVyMv_9XAqY60X9xGxHk8y9JlkO1BFvvKRwUagkQXfZ_s4mZmkMf4FgxKLj3xUIzdoV-OECJx4SUOqu_OHkX4-kungQzZcyBOPB2OeJ3EfJUxHhLUiYSuDmM1Q_xzgmTsw5wc6nJv2oO5u1PeMhtTzbkSVt8WLC6b96MY-KoDfT2HE1-RZIyYbjlYTsZF0qOcQSJYrrKQQLf9ItIHYqlQRwAuQrfRTNbQ6I-tquThJ8-lM" class="w-full h-full object-contain filter grayscale invert opacity-80" />
               </div>
@@ -28,7 +30,9 @@
                 <p class="text-body-sm text-on-surface-variant">Recommended</p>
               </div>
             </button>
-            <button class="w-full text-left flex items-start gap-md p-md rounded-lg border border-outline-variant bg-surface transition-all group hover:border-outline">
+            <button @click="selectDbType('MYSQL')"
+              class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
+              :class="form.dbType === 'MYSQL' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
               <div class="w-10 h-10 shrink-0 rounded bg-surface-variant flex items-center justify-center p-2 mt-0.5 border border-transparent group-hover:border-outline-variant">
                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAesD-m8yRsMM5sLGsmE4DZ9LByWp_a3El7TNGXt87zT_LhD05wMhLVC_oprGUHn25fg4lfLLjDxEXCcN5hxMnnP7rMPH9o1NVNeGY5xu3a7DSgXDzG9zb4AExbcG565IxB9PSmKcaEs9FxNTkxjh0n5hETMj05F1hw8U0stp8YqrsVHbEUxefWuT29dAnyAoj5wl7LbMtmd5OSV8-ssGApxWu8tBnzWDVojgRkWAg1PBdP7SSVLUnC1euKn3ha8RxUUkfTFCnVkQs" class="w-full h-full object-contain filter grayscale invert opacity-60 group-hover:opacity-100" />
               </div>
@@ -37,22 +41,15 @@
                 <p class="text-body-sm text-on-surface-variant">Standard</p>
               </div>
             </button>
-            <button class="w-full text-left flex items-start gap-md p-md rounded-lg border border-outline-variant bg-surface transition-all group hover:border-outline">
+            <button @click="selectDbType('SQLITE')"
+              class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
+              :class="form.dbType === 'SQLITE' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
                <div class="w-10 h-10 shrink-0 rounded bg-surface-variant flex items-center justify-center p-2 mt-0.5 border border-transparent group-hover:border-outline-variant">
                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJb7Ls3pX9WlGKjL4nEzrXoFzwkZ5dCmCI1bUGkKVDKI80jFPK4pCj3Aeq8SMxqHuPbk7iM0KS0Mxm3fOZi14acnRFBjj39tuv8Zj3HLRhe1KMGZcdVA-aUwdc344XAXJzOk7ovisJg2PAwMjb0jPghEcdgFqV3j3K6t10HWtkyQ4WDRY0HBJ9lh3jY0CM-PHawCi3jVKwvMOhSoXabJup0KcLMvK51h8nrVQVFVJyHDYHCLpSH_wvxPpx72Vx_qd38X-lopWXuYU" class="w-full h-full object-contain filter grayscale invert opacity-60 group-hover:opacity-100" />
               </div>
               <div>
                 <p class="font-bold text-on-surface">SQLite</p>
                 <p class="text-body-sm text-on-surface-variant">Embedded</p>
-              </div>
-            </button>
-            <button class="w-full text-left flex items-start gap-md p-md rounded-lg border border-outline-variant bg-surface transition-all group hover:border-outline">
-               <div class="w-10 h-10 shrink-0 rounded bg-surface-variant flex items-center justify-center p-2 mt-0.5 border border-transparent group-hover:border-outline-variant">
-                  <span class="material-symbols-outlined text-outline">more_horiz</span>
-              </div>
-              <div>
-                <p class="font-bold text-on-surface">Others</p>
-                <p class="text-body-sm text-on-surface-variant">Redis, MongoDB...</p>
               </div>
             </button>
           </div>
@@ -70,20 +67,20 @@
         <div class="w-full md:w-2/3 p-lg flex flex-col gap-md">
            <div class="col-span-2">
             <label class="block text-label-caps text-on-surface-variant mb-xs">CONNECTION NAME</label>
-            <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" value="Production Core DB"/>
+            <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" v-model="form.name"/>
           </div>
 
           <div class="grid grid-cols-2 gap-md">
             <div class="col-span-2 md:col-span-1 border-r border-transparent md:border-outline-variant/30 md:pr-4">
               <label class="block text-label-caps text-on-surface-variant mb-xs">HOST</label>
               <div class="relative">
-                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" value="db.production.internal"/>
+                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" v-model="form.host"/>
                 <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">dns</span>
               </div>
             </div>
             <div class="col-span-2 md:col-span-1">
               <label class="block text-label-caps text-on-surface-variant mb-xs">PORT</label>
-              <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="number" value="5432"/>
+              <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="number" v-model.number="form.port"/>
             </div>
           </div>
 
@@ -91,16 +88,16 @@
             <div class="col-span-2 md:col-span-1 border-r border-transparent md:border-outline-variant/30 md:pr-4">
               <label class="block text-label-caps text-on-surface-variant mb-xs">USER</label>
               <div class="relative">
-                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" value="admin_readonly"/>
+                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" v-model="form.username"/>
                 <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">person</span>
               </div>
             </div>
             <div class="col-span-2 md:col-span-1">
               <label class="block text-label-caps text-on-surface-variant mb-xs">PASSWORD</label>
               <div class="relative">
-                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 pr-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="password" value="••••••••••••"/>
+                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 pr-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="password" v-model="form.password"/>
                 <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">lock</span>
-                <button class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors text-[18px] cursor-pointer">visibility</button>
+                <button class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors text-[18px] cursor-pointer" @click="showPassword = !showPassword" :type="showPassword ? 'text' : 'password'">visibility</button>
               </div>
             </div>
           </div>
@@ -108,20 +105,45 @@
           <div class="col-span-2 mb-md hover:translate-y-0.5 transition-transform duration-300">
             <label class="block text-label-caps text-on-surface-variant mb-xs">DATABASE</label>
             <div class="relative">
-              <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" value="analytics_v3"/>
+              <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="text" v-model="form.database"/>
               <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">folder_data</span>
             </div>
           </div>
 
+          <!-- Status messages -->
+          <div v-if="error" class="px-md py-sm bg-error-container text-on-error-container rounded-sm text-body-sm font-medium">{{ error }}</div>
+          <div v-if="success" class="px-md py-sm bg-primary-container/20 text-primary rounded-sm text-body-sm font-medium">{{ success }}</div>
+
           <div class="mt-auto pt-lg border-t border-outline-variant flex items-center justify-between">
-             <button class="flex items-center gap-sm px-md py-sm border border-outline-variant rounded font-medium text-on-surface font-body-md hover:bg-surface transition-all active:scale-[0.98]">
+             <button @click="testConnection" :disabled="testing"
+              class="flex items-center gap-sm px-md py-sm border border-outline-variant rounded font-medium text-on-surface font-body-md hover:bg-surface transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
               <span class="material-symbols-outlined text-outline">network_check</span>
-              Test Connection
+              {{ testing ? 'Testing...' : 'Test Connection' }}
             </button>
             <div class="flex gap-md">
                <button class="text-on-surface-variant hover:text-on-surface font-bold text-body-md transition-colors px-md">Cancel</button>
-               <button class="bg-primary text-on-primary px-lg py-sm rounded border border-transparent font-bold text-body-md hover:opacity-90 active:scale-[0.98] transition-all shadow-sm">Connect</button>
+               <button @click="saveConnection" :disabled="saving"
+                class="bg-primary text-on-primary px-lg py-sm rounded border border-transparent font-bold text-body-md hover:opacity-90 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ saving ? 'Saving...' : 'Connect' }}
+              </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Saved Connections List -->
+      <section v-if="connections.length > 0" class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+        <div class="p-md border-b border-outline-variant">
+          <h3 class="font-headline-md text-[16px] font-bold text-on-surface">Saved Connections</h3>
+        </div>
+        <div class="divide-y divide-outline-variant/40">
+          <div v-for="conn in connections" :key="conn.id" class="flex items-center justify-between px-md py-sm hover:bg-surface-variant transition-colors">
+            <div class="flex items-center gap-md">
+              <span class="font-code-md text-on-surface">{{ conn.name }}</span>
+              <span class="text-code-sm text-outline bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/30">{{ conn.dbType }}</span>
+              <span class="text-body-sm text-on-surface-variant">{{ conn.host }}:{{ conn.port }}/{{ conn.database }}</span>
+            </div>
+            <button @click="deleteConnection(conn.id!)" class="material-symbols-outlined text-[18px] text-outline-variant hover:text-error transition-colors">delete</button>
           </div>
         </div>
       </section>
@@ -153,3 +175,71 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+
+const form = ref<ConnectionConfig>({
+  name: '',
+  dbType: 'POSTGRESQL',
+  host: '',
+  port: 5432,
+  database: '',
+  username: '',
+  password: '',
+})
+
+const connections = ref<ConnectionConfig[]>([])
+const testing = ref(false)
+const saving = ref(false)
+const error = ref('')
+const success = ref('')
+const showPassword = ref(false)
+
+onMounted(() => {
+  connectionsApi.list().then(data => connections.value = data).catch(() => {})
+})
+
+async function testConnection() {
+  testing.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    await connectionsApi.test(form.value)
+    success.value = 'Connection successful!'
+  } catch (e: any) {
+    error.value = e.message || 'Connection failed'
+  } finally {
+    testing.value = false
+  }
+}
+
+async function saveConnection() {
+  saving.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    const saved = await connectionsApi.create(form.value)
+    connections.value.push(saved)
+    success.value = 'Connection saved!'
+  } catch (e: any) {
+    error.value = e.message || 'Failed to save'
+  } finally {
+    saving.value = false
+  }
+}
+
+function selectDbType(type: ConnectionConfig['dbType']) {
+  form.value.dbType = type
+  if (type === 'POSTGRESQL') form.value.port = 5432
+  else if (type === 'MYSQL') form.value.port = 3306
+  else form.value.port = 0
+}
+
+function deleteConnection(id: number) {
+  connectionsApi.delete(id).then(() => {
+    connections.value = connections.value.filter(c => c.id !== id)
+  }).catch(() => {})
+}
+</script>
