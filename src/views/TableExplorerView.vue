@@ -42,21 +42,16 @@
 
        <!-- Tabs Area -->
        <div class="flex gap-lg border-b border-transparent mt-2">
-         <button class="border-b-2 border-primary text-primary pb-sm font-bold text-body-md flex items-center gap-xs">
-            <span class="material-symbols-outlined text-[18px]">schema</span>
-            Schema
-         </button>
-         <button class="text-on-surface-variant pb-sm font-medium text-body-md flex items-center gap-xs hover:text-on-surface transition-colors border-b-2 border-transparent hover:border-outline-variant">
-            <span class="material-symbols-outlined text-[18px]">database</span>
-            Data Preview
-         </button>
-         <button class="text-on-surface-variant pb-sm font-medium text-body-md flex items-center gap-xs hover:text-on-surface transition-colors border-b-2 border-transparent hover:border-outline-variant">
-            <span class="material-symbols-outlined text-[18px]">link</span>
-            Relationships
-         </button>
-         <button class="text-on-surface-variant pb-sm font-medium text-body-md flex items-center gap-xs hover:text-on-surface transition-colors border-b-2 border-transparent hover:border-outline-variant">
-            <span class="material-symbols-outlined text-[18px]">history</span>
-            Change Log
+         <button
+           v-for="tab in tabs" :key="tab.id"
+           @click="currentTab = tab.id"
+           class="pb-sm font-medium text-body-md flex items-center gap-xs transition-colors border-b-2"
+           :class="currentTab === tab.id
+             ? 'border-primary text-primary font-bold'
+             : 'text-on-surface-variant border-transparent hover:text-on-surface hover:border-outline-variant'"
+         >
+            <span class="material-symbols-outlined text-[18px]">{{ tab.icon }}</span>
+            {{ tab.label }}
          </button>
        </div>
        <div class="absolute bottom-0 left-0 w-full h-[1px] bg-outline-variant/60"></div>
@@ -70,7 +65,7 @@
        <div v-else class="grid grid-cols-12 gap-md h-fit max-w-[1400px] mx-auto">
 
          <!-- Columns/Schema Definition Panel -->
-         <div class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col min-h-[400px]">
+         <div v-if="currentTab === 'schema'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col min-h-[400px]">
            <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
               <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Columns</h3>
               <div class="flex items-center gap-sm">
@@ -154,7 +149,7 @@
          </div>
 
          <!-- Data Preview Section Layout -->
-         <div class="col-span-12 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden mt-sm mb-xl">
+         <div v-if="currentTab === 'data'" class="col-span-12 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden mt-sm mb-xl">
             <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
                <h3 class="font-headline-md text-[18px] font-bold text-on-surface flex items-center gap-xs">
                   <span class="material-symbols-outlined text-outline">table_rows</span>
@@ -203,6 +198,15 @@ const columns = ref<ColumnInfo[]>([])
 const previewData = ref<Record<string, unknown>[]>([])
 const tableStats = ref<Record<string, unknown>>({})
 const loading = ref(false)
+
+const tabs = [
+  { id: 'schema', label: 'Schema', icon: 'schema' },
+  { id: 'data', label: 'Data Preview', icon: 'database' },
+  { id: 'relationships', label: 'Relationships', icon: 'link' },
+  { id: 'changelog', label: 'Change Log', icon: 'history' },
+] as const
+type TabId = (typeof tabs)[number]['id']
+const currentTab = ref<TabId>('schema')
 
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 
