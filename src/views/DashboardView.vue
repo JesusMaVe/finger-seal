@@ -95,14 +95,18 @@
           </div>
         </div>
 
-        <!-- Activity Heatmap Mockup -->
+        <!-- Query Intensity Heatmap -->
         <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-xl flex flex-col">
           <span class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-md">Query Intensity</span>
-          <div class="grid grid-cols-7 gap-[2px] flex-1">
-             <!-- Heatmap cells: data from backend -->
-             <div class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm">
-                No query data available
-              </div>
+          <div class="grid grid-cols-7 gap-[2px] flex-1" v-if="metrics.queryIntensity?.length">
+            <div v-for="(item, i) in metrics.queryIntensity" :key="i"
+              class="rounded-sm transition-all duration-300 hover:scale-110 hover:ring-1 hover:ring-primary/50 cursor-help"
+              :style="{ background: 'var(--color-primary)', opacity: item.count > 0 ? Math.max(item.count / queryMaxCount, 0.08) : 0.04 }"
+              :title="item.day + ' | ' + item.count + ' queries'">
+            </div>
+          </div>
+          <div class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm" v-else>
+            No query data available
           </div>
           <div class="mt-md pt-xs flex justify-between items-center text-code-sm font-code-sm text-outline border-t border-outline-variant/50">
             <span>Low</span>
@@ -156,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { connections, selectedConnectionId, wsConnected, wsLogs } from '@/store/app'
 import { schemasApi } from '@/api/schemas'
 
@@ -191,4 +195,10 @@ function formatBytes(bytes: number | null): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
   return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i]
 }
+
+const queryMaxCount = computed(() => {
+  const items = metrics.value.queryIntensity
+  if (!items?.length) return 1
+  return Math.max(...items.map((i: any) => i.count), 1)
+})
 </script>
