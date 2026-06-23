@@ -2,6 +2,12 @@
   <div class="flex-1 flex flex-col min-w-0 bg-surface">
     <!-- Editor Tabs -->
     <div class="flex items-center bg-surface-container-low border-b border-outline-variant shrink-0">
+      <div class="flex items-center gap-sm px-md py-1 shrink-0 border-r border-outline-variant">
+        <select v-model="selectedConnectionId" class="bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none">
+          <option :value="null" disabled>Select connection...</option>
+          <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }} ({{ conn.dbType }})</option>
+        </select>
+      </div>
       <div class="flex-1 flex overflow-x-auto custom-scrollbar">
         <button class="px-md py-sm font-body-md text-body-md text-primary border-b-2 border-primary bg-surface-container-lowest flex items-center gap-sm shrink-0">
           <span>fetch_analytics.sql</span>
@@ -16,9 +22,9 @@
         </button>
       </div>
       <div class="px-md flex gap-sm shrink-0 border-l border-outline-variant py-1">
-        <button class="flex items-center gap-xs px-md py-xs bg-primary text-on-primary rounded-sm font-body-md text-body-md font-bold hover:opacity-90 active:opacity-80 transition-all">
+        <button @click="runQuery" :disabled="running" class="flex items-center gap-xs px-md py-xs bg-primary text-on-primary rounded-sm font-body-md text-body-md font-bold hover:opacity-90 active:opacity-80 transition-all">
           <span class="material-symbols-outlined text-[18px]">play_arrow</span>
-          Run
+          {{ running ? 'Running...' : 'Run' }}
         </button>
         <button class="flex items-center gap-xs px-md py-xs bg-secondary-container text-on-secondary-container rounded-sm font-body-md text-body-md hover:bg-surface-variant transition-all">
           <span class="material-symbols-outlined text-[18px]">save</span>
@@ -29,27 +35,8 @@
 
     <!-- SQL Code Editor -->
     <div class="flex-1 overflow-hidden relative flex bg-surface">
-      <!-- Line Numbers -->
-      <div class="w-12 bg-surface-container-low border-r border-outline-variant text-right pr-sm py-md font-code-sm text-code-sm text-outline select-none shrink-0 border-l border-outline-variant/30">
-        1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10<br/>11<br/>12
-      </div>
       <!-- Editor Body -->
-      <div class="flex-1 p-md font-code-md text-code-md bg-surface overflow-auto custom-scrollbar focus:outline-none text-on-surface" contenteditable="true" spellcheck="false">
-        <span class="sql-keyword">SELECT</span><br/>
-        &nbsp;&nbsp;u.id, <br/>
-        &nbsp;&nbsp;u.username, <br/>
-        &nbsp;&nbsp;u.email, <br/>
-        &nbsp;&nbsp;<span class="sql-function">COUNT</span>(o.order_id) <span class="sql-keyword">AS</span> total_orders,<br/>
-        &nbsp;&nbsp;<span class="sql-function">SUM</span>(o.amount) <span class="sql-keyword">AS</span> revenue<br/>
-        <span class="sql-keyword">FROM</span> users u<br/>
-        <span class="sql-keyword">JOIN</span> orders o <span class="sql-keyword">ON</span> u.id = o.user_id<br/>
-        <span class="sql-keyword">WHERE</span> o.created_at > <span class="sql-string">'2023-01-01'</span><br/>
-        <span class="sql-keyword">GROUP BY</span> u.id, u.username, u.email<br/>
-        <span class="sql-keyword">ORDER BY</span> revenue <span class="sql-keyword">DESC</span><br/>
-        <span class="sql-keyword">LIMIT</span> 500;
-        <br/><br/>
-        <span class="sql-comment">-- Fetching top performing accounts for the quarterly audit</span>
-      </div>
+      <textarea v-model="sql" class="flex-1 p-md font-code-md text-code-md bg-surface overflow-auto custom-scrollbar focus:outline-none text-on-surface resize-none border-0" spellcheck="false" placeholder="Enter SQL query..."></textarea>
     </div>
 
     <!-- Results Panel -->
@@ -64,7 +51,10 @@
           </div>
         </div>
         <div class="flex items-center gap-md">
-          <span class="font-code-sm text-code-sm text-on-surface-variant">Fetched 500 rows in 12ms</span>
+          <span class="font-code-sm text-code-sm text-on-surface-variant" v-if="results">
+          {{ results.rows ? results.rows.length + ' rows' : results.affectedRows + ' rows affected' }} in {{ results.elapsedMs }}ms
+        </span>
+        <span class="font-code-sm text-code-sm text-on-surface-variant" v-else>Ready</span>
           <div class="h-4 w-[1px] bg-outline-variant"></div>
           <div class="flex gap-xs">
             <button class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all">filter_list</button>
@@ -76,28 +66,28 @@
 
       <!-- Data Table -->
       <div class="flex-1 overflow-auto custom-scrollbar bg-surface-container-lowest relative">
-        <table class="w-full text-left font-body-sm text-body-sm border-collapse min-w-[600px]">
-          <thead class="bg-surface-container-high sticky top-0 z-10 shadow-sm">
-            <tr>
-              <th class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">#</th>
-              <th class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">id</th>
-              <th class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">username</th>
-              <th class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">email</th>
-              <th class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">total_orders</th>
-              <th class="px-sm py-2 border-b border-outline-variant font-bold text-on-surface">revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in mockResults" :key="user.id" class="hover:bg-surface-variant transition-colors group cursor-pointer">
-              <td class="px-sm py-1 border-r border-b border-outline-variant text-outline group-hover:text-on-surface-variant">{{ user.index }}</td>
-              <td class="px-sm py-1 border-r border-b border-outline-variant font-code-sm text-on-surface">{{ user.id }}</td>
-              <td class="px-sm py-1 border-r border-b border-outline-variant">{{ user.username }}</td>
-              <td class="px-sm py-1 border-r border-b border-outline-variant">{{ user.email }}</td>
-              <td class="px-sm py-1 border-r border-b border-outline-variant">{{ user.orders }}</td>
-              <td class="px-sm py-1 border-b border-outline-variant">{{ user.revenue }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <template v-if="results && results.columns && results.rows">
+          <table class="w-full text-left font-body-sm text-body-sm border-collapse min-w-[600px]">
+            <thead class="bg-surface-container-high sticky top-0 z-10 shadow-sm">
+              <tr>
+                <th class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">#</th>
+                <th v-for="col in results.columns" :key="col" class="px-sm py-2 border-r border-b border-outline-variant font-bold text-on-surface">{{ col }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, idx) in results.rows" :key="idx" class="hover:bg-surface-variant transition-colors group cursor-pointer">
+                <td class="px-sm py-1 border-r border-b border-outline-variant text-outline group-hover:text-on-surface-variant font-code-sm">{{ idx + 1 }}</td>
+                <td v-for="col in results.columns" :key="col" class="px-sm py-1 border-r border-b border-outline-variant font-code-sm text-on-surface">{{ row[col] ?? '' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+        <template v-else-if="results && results.error">
+          <div class="p-md text-error font-body-sm">{{ results.error }}</div>
+        </template>
+        <template v-else>
+          <div class="flex items-center justify-center h-full text-on-surface-variant font-body-sm italic">Run a query to see results</div>
+        </template>
       </div>
     </div>
     
@@ -118,7 +108,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { queryApi, type QueryResult } from '@/api/query'
+import { connectionsApi, type ConnectionConfig } from '@/api/connections'
 
-const mockResults = ref<{ index: number; id: string; username: string; email: string; orders: number; revenue: string }[]>([])
+const connections = ref<ConnectionConfig[]>([])
+const selectedConnectionId = ref<number | null>(null)
+const sql = ref(`SELECT
+  u.id,
+  u.username,
+  u.email
+FROM users u
+LIMIT 100;`)
+const results = ref<QueryResult | null>(null)
+const running = ref(false)
+
+onMounted(() => {
+  connectionsApi.list().then(data => connections.value = data).catch(() => {})
+})
+
+async function runQuery() {
+  if (!selectedConnectionId.value || !sql.value.trim()) return
+  running.value = true
+  results.value = null
+  try {
+    results.value = await queryApi.execute(selectedConnectionId.value, sql.value)
+  } catch (e: any) {
+    results.value = { error: e.message, elapsedMs: 0 }
+  } finally {
+    running.value = false
+  }
+}
 </script>
