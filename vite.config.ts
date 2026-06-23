@@ -19,6 +19,12 @@ export default defineConfig(() => {
       strictPort: true,
       host: host || false,
       hmr: host ? { protocol: 'ws', host, port: 3001 } : undefined,
+      proxy: {
+        '/ws': {
+          target: 'http://localhost:8080',
+          ws: true,
+        },
+      },
       watch: {
         ignored: ['**/src-tauri/**'],
       },

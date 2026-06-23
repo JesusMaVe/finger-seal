@@ -144,15 +144,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { ref, watch } from 'vue'
 import { connections } from '@/store/app'
 import { useWebSocket, type QueryEvent } from '@/composables/useWebSocket'
 
 const logs = ref<QueryEvent[]>([])
 
-const port = window.location.port || '8080'
-const { connected, lastEvent } = useWebSocket(`ws://${window.location.hostname}:${port}/ws/events`)
+// ponytail: dev uses Vite proxy, prod/Tauri connects to backend port directly
+const wsUrl = window.location.port === '3000'
+  ? `ws://${window.location.host}/ws/events`
+  : `ws://localhost:8080/ws/events`
+const { connected, lastEvent } = useWebSocket(wsUrl)
 
 watch(lastEvent, (ev) => {
   if (ev && ev.type === 'query') {
