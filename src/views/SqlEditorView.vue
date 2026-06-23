@@ -26,7 +26,7 @@
     <!-- SQL Code Editor -->
     <div class="flex-1 overflow-hidden relative flex bg-surface">
       <!-- Editor Body -->
-      <textarea v-model="sql" class="flex-1 p-md font-code-md text-code-md bg-surface overflow-auto custom-scrollbar focus:outline-none text-on-surface resize-none border-0" spellcheck="false" placeholder="Enter SQL query..."></textarea>
+      <textarea v-model="currentSql" class="flex-1 p-md font-code-md text-code-md bg-surface overflow-auto custom-scrollbar focus:outline-none text-on-surface resize-none border-0" spellcheck="false" placeholder="Enter SQL query..."></textarea>
     </div>
 
     <!-- Results Panel -->
@@ -118,15 +118,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
-import { connections, loadConnections, selectedConnectionId, pendingQuery } from '@/store/app'
+import { connections, loadConnections, selectedConnectionId, pendingQuery, currentSql } from '@/store/app'
 
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
-const sql = ref(`SELECT
-  u.id,
-  u.username,
-  u.email
-FROM users u
-LIMIT 100;`)
 const results = ref<QueryResult | null>(null)
 const running = ref(false)
 const showHistory = ref(false)
@@ -144,17 +138,17 @@ watch(selectedConnectionId, async (id) => {
 
 watch(pendingQuery, (q) => {
   if (q) {
-    sql.value = q
+    currentSql.value = q
     pendingQuery.value = ''
   }
 })
 
 async function runQuery() {
-  if (!selectedConnectionId.value || !sql.value.trim()) return
+  if (!selectedConnectionId.value || !currentSql.value.trim()) return
   running.value = true
   results.value = null
   try {
-    results.value = await queryApi.execute(selectedConnectionId.value, sql.value)
+    results.value = await queryApi.execute(selectedConnectionId.value, currentSql.value)
   } catch (e: any) {
     results.value = { error: e.message, elapsedMs: 0 }
   } finally {
@@ -163,7 +157,7 @@ async function runQuery() {
 }
 
 async function saveSql() {
-  const content = sql.value
+  const content = currentSql.value
   if ('showSaveFilePicker' in window) {
     const handle = await (window as any).showSaveFilePicker({
       suggestedName: 'query.sql',
@@ -224,6 +218,6 @@ async function clearHistory() {
 }
 
 function loadHistorySql(entrySql: string) {
-  sql.value = entrySql
+  currentSql.value = entrySql
 }
 </script>
