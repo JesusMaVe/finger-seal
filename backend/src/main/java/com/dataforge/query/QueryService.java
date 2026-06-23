@@ -3,6 +3,7 @@ package com.dataforge.query;
 import com.dataforge.connection.ConnectionConfig;
 import com.dataforge.connection.ConnectionRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -47,7 +48,7 @@ public class QueryService {
         List<String> columns = new ArrayList<>();
         List<Map<String, Object>> rows = new ArrayList<>();
 
-        jdbc.query(sql, (ResultSet rs) -> {
+        jdbc.query(sql, (ResultSetExtractor<Void>) rs -> {
             ResultSetMetaData meta = rs.getMetaData();
             int colCount = meta.getColumnCount();
             for (int i = 1; i <= colCount; i++) {
@@ -60,6 +61,7 @@ public class QueryService {
                 }
                 rows.add(row);
             }
+            return null;
         });
 
         long elapsed = System.currentTimeMillis() - start;
