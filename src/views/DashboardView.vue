@@ -98,10 +98,10 @@
         <!-- Query Intensity Heatmap -->
         <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-xl flex flex-col">
           <span class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-md">Query Intensity</span>
-          <div class="grid grid-cols-7 gap-[2px] flex-1" v-if="metrics.queryIntensity?.length">
-            <div v-for="(item, i) in metrics.queryIntensity" :key="i"
+          <div class="grid grid-cols-7 gap-[2px] flex-1" v-if="heatmapData.length">
+            <div v-for="(item, i) in heatmapData" :key="i"
               class="rounded-sm transition-all duration-300 hover:scale-110 hover:ring-1 hover:ring-primary/50 cursor-help"
-              :style="{ background: 'var(--color-primary)', opacity: item.count > 0 ? Math.max(item.count / queryMaxCount, 0.08) : 0.04 }"
+              :style="{ background: 'var(--color-primary)', opacity: item.count > 0 ? Math.max(item.count / heatmapMax, 0.08) : 0.04 }"
               :title="item.day + ' | ' + item.count + ' queries'">
             </div>
           </div>
@@ -204,6 +204,33 @@ const queryMaxCount = computed(() => {
   const items = metrics.value.queryIntensity
   if (!items?.length) return 1
   return Math.max(...items.map((i: any) => i.count), 1)
+})
+
+// Real-time heatmap from wsLogs (ignored by backend, computed client-side)
+const heatmapData = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  // Count queries per day from wsLogs
+  const counts: Record<string, number> = {}
+  for (const log of wsLogs.value) {
+    const d = new Date(log.timestamp)
+    const key = d.toISOString().slice(0, 10)
+    counts[key] = (counts[key] || 0) + 1
+  }
+  // Build 28-day array
+  const result: { day: string; count: number }[] = []
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const key = d.toISOString().slice(0, 10)
+    result.push({ day: key, count: counts[key] || 0 })
+  }
+  return result
+})
+
+const heatmapMax = computed(() => {
+  const max = Math.max(...heatmapData.value.map(i => i.count), 1)
+  return max || 1
 })
 
 const displayedLogs = computed(() =>
