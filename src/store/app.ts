@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { ConnectionConfig } from '@/api/connections'
 import { connectionsApi } from '@/api/connections'
 
@@ -16,7 +16,14 @@ export function applyTheme(t: Theme) {
   localStorage.setItem('fs-theme', t)
 }
 export const isSidebarCollapsed = ref(false)
-export const selectedConnectionId = ref<number | null>(null)
+
+// Persist selected connection across reloads
+const savedConnId = localStorage.getItem('fs-connection-id')
+export const selectedConnectionId = ref<number | null>(savedConnId ? Number(savedConnId) : null)
+watch(selectedConnectionId, (id) => {
+  if (id) localStorage.setItem('fs-connection-id', String(id))
+  else localStorage.removeItem('fs-connection-id')
+})
 export const selectedTable = ref<string>('')
 export const pendingQuery = ref('')
 export const currentSql = ref('')
