@@ -97,18 +97,30 @@
 
         <!-- Query Intensity Heatmap -->
         <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-xl flex flex-col">
-          <span class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-md">Query Intensity</span>
-          <div class="grid grid-cols-7 gap-[2px] flex-1" v-if="heatmapData.length">
-            <div v-for="(item, i) in heatmapData" :key="i"
-              class="rounded-sm transition-all duration-300 hover:scale-110 hover:ring-1 hover:ring-primary/50 cursor-help"
-              :style="{ background: 'var(--color-primary)', opacity: item.count > 0 ? Math.max(item.count / heatmapMax, 0.08) : 0.04 }"
-              :title="item.day + ' | ' + item.count + ' queries'">
+          <span class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-sm">Query Intensity</span>
+          <div class="flex flex-col gap-[2px] flex-1" v-if="heatmapWeeks.length">
+            <!-- Column headers -->
+            <div class="grid grid-cols-7 gap-[2px]">
+              <div v-for="label in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" :key="label"
+                class="text-center font-code-sm text-[9px] text-outline uppercase tracking-wider py-1">{{ label }}</div>
+            </div>
+            <!-- 4 week rows -->
+            <div v-for="(week, wi) in heatmapWeeks" :key="wi" class="grid grid-cols-7 gap-[2px]">
+              <div v-for="(item, di) in week" :key="di"
+                class="aspect-square rounded-sm border transition-all duration-300 hover:scale-110 hover:ring-1 hover:ring-primary/50 cursor-help"
+                :class="{ 'border-outline-variant/20': !item.isFuture, 'border-transparent opacity-30': item.isFuture }"
+                :style="{
+                  background: item.isFuture ? 'transparent' : 'var(--color-primary)',
+                  opacity: item.isFuture ? 0.3 : (item.count > 0 ? Math.max(item.count / heatmapMax, 0.15) : 0.06)
+                }"
+                :title="item.isFuture ? '' : (item.day + ' | ' + item.count + ' queries')">
+              </div>
             </div>
           </div>
-          <div class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm" v-else>
+          <div class="flex items-center justify-center w-full min-h-[80px] text-on-surface-variant font-body-sm" v-else>
             No query data available
           </div>
-          <div class="mt-md pt-xs flex justify-between items-center text-code-sm font-code-sm text-outline border-t border-outline-variant/50">
+          <div class="mt-sm pt-xs flex justify-between items-center text-code-sm font-code-sm text-outline border-t border-outline-variant/50">
             <span>Low</span>
             <span>Critical</span>
           </div>
@@ -206,8 +218,8 @@ const queryMaxCount = computed(() => {
   return Math.max(...items.map((i: any) => i.count), 1)
 })
 
-// Real-time heatmap from wsLogs (ignored by backend, computed client-side)
-const heatmapData = computed(() => {
+// Real-time heatmap from wsLogs, organized as 4 weeks × 7 days (Mon-Sun)
+const heatmapWeeks = computed(() => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   // Count queries per day from wsLogs (local tz)
@@ -217,19 +229,33 @@ const heatmapData = computed(() => {
     const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
     counts[key] = (counts[key] || 0) + 1
   }
-  // Build 28-day array
-  const result: { day: string; count: number }[] = []
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
-    result.push({ day: key, count: counts[key] || 0 })
+  // Find the Monday of the week containing (today - 27 days) ago
+  const weekStart = new Date(today)
+  weekStart.setDate(weekStart.getDate() - 27)
+  const dow = weekStart.getDay() // 0=Sun
+  weekStart.setDate(weekStart.getDate() + (dow === 0 ? -6 : 1 - dow)) // back to Monday
+  // Build 4 weeks of 7 days
+  const weeks: { day: string; count: number; isFuture: boolean }[][] = []
+  for (let w = 0; w < 4; w++) {
+    const week: { day: string; count: number; isFuture: boolean }[] = []
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(weekStart)
+      date.setDate(weekStart.getDate() + w * 7 + d)
+      const key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
+      week.push({ day: key, count: counts[key] || 0, isFuture: date > today })
+    }
+    weeks.push(week)
   }
-  return result
+  return weeks
 })
 
 const heatmapMax = computed(() => {
-  const max = Math.max(...heatmapData.value.map(i => i.count), 1)
+  let max = 0
+  for (const week of heatmapWeeks.value) {
+    for (const item of week) {
+      if (item.count > max) max = item.count
+    }
+  }
   return max || 1
 })
 
