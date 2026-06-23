@@ -6,25 +6,13 @@
         <span v-if="selectedConnectionId" class="text-body-sm font-code-sm text-on-surface">{{ currentConn?.name }} <span class="text-outline">({{ currentConn?.dbType }})</span></span>
         <span v-else class="text-body-sm text-outline italic">No connection selected</span>
       </div>
-      <div class="flex-1 flex overflow-x-auto custom-scrollbar">
-        <button class="px-md py-sm font-body-md text-body-md text-primary border-b-2 border-primary bg-surface-container-lowest flex items-center gap-sm shrink-0">
-          <span>fetch_analytics.sql</span>
-          <span class="material-symbols-outlined text-[14px]">close</span>
-        </button>
-        <button class="px-md py-sm font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-highest transition-colors flex items-center gap-sm shrink-0">
-          <span>user_report_v2.sql</span>
-          <span class="material-symbols-outlined text-[14px]">close</span>
-        </button>
-        <button class="px-md py-sm text-on-surface-variant hover:bg-surface-container-highest shrink-0">
-          <span class="material-symbols-outlined text-[18px]">add</span>
-        </button>
-      </div>
+      <div class="flex-1"></div>
       <div class="px-md flex gap-sm shrink-0 border-l border-outline-variant py-1">
         <button @click="runQuery" :disabled="running" class="flex items-center gap-xs px-md py-xs bg-primary text-on-primary rounded-sm font-body-md text-body-md font-bold hover:opacity-90 active:opacity-80 transition-all">
           <span class="material-symbols-outlined text-[18px]">play_arrow</span>
           {{ running ? 'Running...' : 'Run' }}
         </button>
-        <button class="flex items-center gap-xs px-md py-xs bg-secondary-container text-on-secondary-container rounded-sm font-body-md text-body-md hover:bg-surface-variant transition-all">
+        <button @click="saveSql" class="flex items-center gap-xs px-md py-xs bg-secondary-container text-on-secondary-container rounded-sm font-body-md text-body-md hover:bg-surface-variant transition-all">
           <span class="material-symbols-outlined text-[18px]">save</span>
           Save
         </button>
@@ -46,11 +34,7 @@
       <!-- Toolbar -->
       <div class="flex items-center justify-between px-md py-xs border-b border-outline-variant bg-surface-container">
         <div class="flex gap-md items-center">
-          <div class="flex">
-            <button class="px-md py-1 font-body-sm text-body-sm font-bold text-on-surface border-b-2 border-primary bg-surface-container-lowest transition-all">Data</button>
-            <button class="px-md py-1 font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-all">Console</button>
-            <button class="px-md py-1 font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-all">Execution Plan</button>
-          </div>
+          <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Data</span>
         </div>
         <div class="flex items-center gap-md">
           <span class="font-code-sm text-code-sm text-on-surface-variant" v-if="results">
@@ -59,9 +43,7 @@
         <span class="font-code-sm text-code-sm text-on-surface-variant" v-else>Ready</span>
           <div class="h-4 w-[1px] bg-outline-variant"></div>
           <div class="flex gap-xs">
-            <button class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all">filter_list</button>
-            <button class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all">download</button>
-            <button class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all">share</button>
+            <button @click="exportCsv" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export CSV">download</button>
           </div>
         </div>
       </div>
@@ -171,6 +153,35 @@ async function runQuery() {
   } finally {
     running.value = false
   }
+}
+
+function saveSql() {
+  const blob = new Blob([sql.value], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'query.sql'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function exportCsv() {
+  if (!results.value?.columns || !results.value?.rows) return
+  const cols = results.value.columns
+  const rows = results.value.rows.map((r: any) => cols.map(c => {
+    const v = r[c]
+    if (v == null) return ''
+    const s = String(v)
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s
+  }).join(','))
+  const csv = [cols.join(','), ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 async function clearHistory() {
