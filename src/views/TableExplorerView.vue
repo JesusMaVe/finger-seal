@@ -1,16 +1,13 @@
 <template>
   <div class="flex-1 flex flex-col overflow-hidden bg-surface-container-lowest h-full">
-    <!-- Selectors -->
+    <!-- Connection info bar -->
     <div class="flex items-center gap-md px-md py-sm bg-surface border-b border-outline-variant shrink-0">
-      <select v-model="selectedConnectionId" class="bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none">
-        <option :value="null" disabled>Select connection...</option>
-        <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }}</option>
-      </select>
-      <select v-model="selectedTable" @change="selectTable(selectedTable)" class="bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none" :disabled="!selectedConnectionId || tables.length === 0">
-        <option value="" disabled>Select table...</option>
-        <option v-for="t in tables" :key="t.table_name" :value="t.table_name">{{ t.table_name }}</option>
-      </select>
-      <span v-if="loading" class="text-code-sm text-outline animate-pulse">Loading...</span>
+      <span v-if="selectedConnectionId" class="text-body-sm font-code-sm text-on-surface">{{ currentConn?.name }} <span class="text-outline">({{ currentConn?.dbType }})</span></span>
+      <span v-else class="text-body-sm text-outline italic">No connection selected</span>
+      <span class="text-code-sm text-on-surface-variant mx-2">/</span>
+      <span v-if="selectedTable" class="font-code-sm text-on-surface font-bold">{{ selectedTable }}</span>
+      <span v-else class="text-body-sm text-outline italic">Select a table from the sidebar</span>
+      <span v-if="loading" class="text-code-sm text-outline animate-pulse ml-auto">Loading...</span>
     </div>
 
     <!-- Header Section -->
@@ -199,17 +196,17 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { schemasApi, type TableInfo, type ColumnInfo } from '@/api/schemas'
+import { schemasApi, type ColumnInfo } from '@/api/schemas'
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { selectedConnectionId, selectedTable } from '@/store/app'
 
 const connections = ref<ConnectionConfig[]>([])
-const selectedConnectionId = ref<number | null>(null)
-const tables = ref<TableInfo[]>([])
-const selectedTable = ref<string>('')
 const columns = ref<ColumnInfo[]>([])
 const previewData = ref<Record<string, unknown>[]>([])
 const tableStats = ref<Record<string, unknown>>({})
 const loading = ref(false)
+
+const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 
 const previewColumns = computed(() =>
   previewData.value.length > 0 ? Object.keys(previewData.value[0]) : []
@@ -219,24 +216,25 @@ onMounted(() => {
   connectionsApi.list().then(data => connections.value = data).catch(() => {})
 })
 
-watch(selectedConnectionId, (id) => {
-  if (!id) return
-  selectedTable.value = ''
+watch(selectedConnectionId, () => {
   columns.value = []
   previewData.value = []
   tableStats.value = {}
-  schemasApi.listTables(id).then(data => tables.value = data).catch(() => {})
 })
 
-async function selectTable(tableName: string) {
-  if (!tableName || !selectedConnectionId.value) return
-  selectedTable.value = tableName
+watch([selectedConnectionId, selectedTable], async ([connId, table]) => {
+  if (!connId || !table) {
+    columns.value = []
+    previewData.value = []
+    tableStats.value = {}
+    return
+  }
   loading.value = true
   try {
     const [cols, data, stats] = await Promise.all([
-      schemasApi.tableColumns(selectedConnectionId.value, tableName),
-      schemasApi.tableData(selectedConnectionId.value, tableName, 100),
-      schemasApi.tableStats(selectedConnectionId.value, tableName),
+      schemasApi.tableColumns(connId, table),
+      schemasApi.tableData(connId, table, 100),
+      schemasApi.tableStats(connId, table),
     ])
     columns.value = cols
     previewData.value = data
@@ -248,11 +246,27 @@ async function selectTable(tableName: string) {
   } finally {
     loading.value = false
   }
-}
+})
 
 async function refresh() {
   if (selectedTable.value && selectedConnectionId.value) {
-    await selectTable(selectedTable.value)
+    loading.value = true
+    try {
+      const [cols, data, stats] = await Promise.all([
+        schemasApi.tableColumns(selectedConnectionId.value, selectedTable.value),
+        schemasApi.tableData(selectedConnectionId.value, selectedTable.value, 100),
+        schemasApi.tableStats(selectedConnectionId.value, selectedTable.value),
+      ])
+      columns.value = cols
+      previewData.value = data
+      tableStats.value = stats
+    } catch {
+      columns.value = []
+      previewData.value = []
+      tableStats.value = {}
+    } finally {
+      loading.value = false
+    }
   }
 }
 </script>

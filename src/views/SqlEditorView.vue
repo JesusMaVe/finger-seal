@@ -3,10 +3,8 @@
     <!-- Editor Tabs -->
     <div class="flex items-center bg-surface-container-low border-b border-outline-variant shrink-0">
       <div class="flex items-center gap-sm px-md py-1 shrink-0 border-r border-outline-variant">
-        <select v-model="selectedConnectionId" class="bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none">
-          <option :value="null" disabled>Select connection...</option>
-          <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }} ({{ conn.dbType }})</option>
-        </select>
+        <span v-if="selectedConnectionId" class="text-body-sm font-code-sm text-on-surface">{{ currentConn?.name }} <span class="text-outline">({{ currentConn?.dbType }})</span></span>
+        <span v-else class="text-body-sm text-outline italic">No connection selected</span>
       </div>
       <div class="flex-1 flex overflow-x-auto custom-scrollbar">
         <button class="px-md py-sm font-body-md text-body-md text-primary border-b-2 border-primary bg-surface-container-lowest flex items-center gap-sm shrink-0">
@@ -135,12 +133,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { selectedConnectionId } from '@/store/app'
 
 const connections = ref<ConnectionConfig[]>([])
-const selectedConnectionId = ref<number | null>(null)
+const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 const sql = ref(`SELECT
   u.id,
   u.username,
