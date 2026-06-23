@@ -117,7 +117,7 @@ public class DashboardController {
         // Query intensity: last 28 days from query history (H2 config DB)
         try {
             List<Map<String, Object>> rawDays = configJdbc.query(
-                "SELECT DATE(created_at) AS day, COUNT(*) AS cnt FROM query_history WHERE connection_id = ? AND created_at >= DATEADD('DAY', -27, CURRENT_DATE) GROUP BY DATE(created_at) ORDER BY day",
+                "SELECT CAST(created_at AS DATE) AS day, COUNT(*) AS cnt FROM query_history WHERE connection_id = ? AND created_at >= CURRENT_DATE - 27 GROUP BY CAST(created_at AS DATE) ORDER BY day",
                 (rs, i) -> {
                     Map<String, Object> row = new LinkedHashMap<>();
                     row.put("day", rs.getDate("day").toLocalDate().toString());

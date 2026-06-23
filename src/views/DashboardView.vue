@@ -119,7 +119,9 @@
       <section class="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden mt-sm mb-xl drop-shadow-sm">
         <div class="px-md py-sm border-b border-outline-variant flex justify-between items-center bg-surface-container/50">
           <h2 class="font-headline-md text-[16px] text-on-surface">Recent Query Logs</h2>
-          <button class="text-primary font-body-sm font-bold text-body-sm hover:underline active:opacity-80 transition-all">View All Logs</button>
+          <button @click="showAllLogs = !showAllLogs" class="text-primary font-body-sm font-bold text-body-sm hover:underline active:opacity-80 transition-all">
+  {{ showAllLogs ? 'Show Less' : 'View All (' + wsLogs.length + ')' }}
+</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
@@ -133,7 +135,16 @@
               </tr>
             </thead>
             <tbody class="font-body-sm">
-              <tr v-if="wsConnected" class="border-b border-outline-variant/30 bg-surface/50">
+              <template v-if="wsLogs.length">
+                <tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/40 transition-colors cursor-pointer group" v-for="(log, i) in displayedLogs" :key="i">
+                  <td class="px-md py-2 font-code-sm text-code-sm text-outline group-hover:text-on-surface-variant transition-colors">{{ new Date(log.timestamp).toLocaleTimeString() }}</td>
+                  <td class="px-md py-2 font-body-sm text-on-surface">conn-{{ log.connectionId }}</td>
+                  <td class="px-md py-2 font-code-sm text-code-sm text-primary/80 group-hover:text-primary transition-colors truncate max-w-[200px]">{{ log.sql }}</td>
+                  <td class="px-md py-2 font-code-sm text-code-sm text-right text-on-surface-variant">{{ log.elapsedMs }}ms</td>
+                  <td class="px-md py-2 font-code-sm text-code-sm text-right font-bold" :class="log.status === 'ERROR' ? 'text-error' : 'text-on-surface'">{{ log.rows ?? '-' }}</td>
+                </tr>
+              </template>
+              <tr v-else-if="wsConnected" class="border-b border-outline-variant/30 bg-surface/50">
                 <td colspan="5" class="px-md py-2 text-center">
                   <span class="inline-flex items-center gap-2 text-code-sm text-primary">
                     <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
@@ -141,14 +152,7 @@
                   </span>
                 </td>
               </tr>
-              <tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/40 transition-colors cursor-pointer group" v-for="(log, i) in wsLogs" :key="i">
-                <td class="px-md py-2 font-code-sm text-code-sm text-outline group-hover:text-on-surface-variant transition-colors">{{ new Date(log.timestamp).toLocaleTimeString() }}</td>
-                <td class="px-md py-2 font-body-sm text-on-surface">conn-{{ log.connectionId }}</td>
-                <td class="px-md py-2 font-code-sm text-code-sm text-primary/80 group-hover:text-primary transition-colors truncate max-w-[200px]">{{ log.sql }}</td>
-                <td class="px-md py-2 font-code-sm text-code-sm text-right text-on-surface-variant">{{ log.elapsedMs }}ms</td>
-                <td class="px-md py-2 font-code-sm text-code-sm text-right font-bold" :class="log.status === 'ERROR' ? 'text-error' : 'text-on-surface'">{{ log.rows ?? '-' }}</td>
-              </tr>
-              <tr v-if="!wsLogs.length && !wsConnected">
+              <tr v-else>
                 <td colspan="5" class="px-md py-4 text-center text-on-surface-variant font-body-sm italic">Not connected — start the backend</td>
               </tr>
             </tbody>
@@ -201,4 +205,10 @@ const queryMaxCount = computed(() => {
   if (!items?.length) return 1
   return Math.max(...items.map((i: any) => i.count), 1)
 })
+
+const displayedLogs = computed(() =>
+  showAllLogs.value ? wsLogs.value : wsLogs.value.slice(0, 5)
+)
+
+const showAllLogs = ref(false)
 </script>
