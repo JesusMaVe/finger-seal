@@ -45,7 +45,16 @@ Thumbs.db
 # Coverage
 coverage/
 
+# Gradle / Java
+backend/.gradle/
+backend/build/
+backend/data/
+*.class
+*.jar
+*.war
+
 # Misc
 .cache/
 tmp/
 *.orig
+result.md
