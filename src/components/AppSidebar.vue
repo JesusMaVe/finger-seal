@@ -5,15 +5,23 @@
         <div class="w-8 h-8 rounded-sm bg-primary-container flex items-center justify-center">
           <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">database</span>
         </div>
-        <div>
-          <h2 class="font-headline-md text-[14px] text-on-surface leading-tight">Localhost</h2>
-          <p class="font-body-sm text-[11px] text-on-surface-variant">PostgreSQL 15.2</p>
+        <div v-if="selectedConnectionId && connections.length > 0">
+          <h2 class="font-headline-md text-[14px] text-on-surface leading-tight">{{ connections.find(c => c.id === selectedConnectionId)?.name || 'Database' }}</h2>
+          <p class="font-body-sm text-[11px] text-on-surface-variant">{{ connections.find(c => c.id === selectedConnectionId)?.dbType || '' }}</p>
+        </div>
+        <div v-else>
+          <h2 class="font-headline-md text-[14px] text-on-surface leading-tight">No connection</h2>
+          <p class="font-body-sm text-[11px] text-on-surface-variant">Add one to get started</p>
         </div>
       </div>
-      <button class="w-full bg-primary text-on-primary font-body-md text-body-md py-sm rounded-sm hover:opacity-90 transition-all flex items-center justify-center gap-xs">
+      <button @click="activeView = 'connections'" class="w-full bg-primary text-on-primary font-body-md text-body-md py-sm rounded-sm hover:opacity-90 transition-all flex items-center justify-center gap-xs">
          <span class="material-symbols-outlined text-[18px]">add</span>
          New Connection
       </button>
+      <!-- Connection selector -->
+      <select v-if="connections.length > 1" v-model="selectedConnectionId" @change="selectedConnectionId && selectConnection(selectedConnectionId)" class="w-full bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-code-sm text-on-surface outline-none mb-md">
+        <option v-for="conn in connections" :key="conn.id" :value="conn.id">{{ conn.name }}</option>
+      </select>
     </div>
 
     <!-- Scrollable Navigation -->
@@ -36,9 +44,10 @@
       
       <!-- Sub-list of tables if Tables is active -->
       <div v-if="activeView === 'tables'" class="ml-8 flex flex-col gap-1 border-l border-outline-variant/30 pl-xs mt-1 mb-2">
-         <div class="p-xs text-body-sm rounded hover:bg-surface-variant cursor-pointer text-primary font-code-md">users</div>
-         <div class="p-xs text-body-sm rounded hover:bg-surface-variant cursor-pointer text-on-surface-variant font-code-md">orders</div>
-         <div class="p-xs text-body-sm rounded hover:bg-surface-variant cursor-pointer text-on-surface-variant font-code-md">products</div>
+        <div v-for="t in tables" :key="t.table_name" @click="goToTable(t.table_name)" class="p-xs text-body-sm rounded hover:bg-surface-variant cursor-pointer font-code-md" :class="t.table_type === 'VIEW' ? 'text-outline' : 'text-on-surface-variant'">
+          {{ t.table_name }}
+        </div>
+        <div v-if="tables.length === 0" class="p-xs text-body-sm text-outline italic">No tables found</div>
       </div>
 
       <a href="#" @click.prevent="activeView = 'dashboard'"
@@ -70,5 +79,36 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { activeView } from '@/store/app'
+import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { schemasApi, type TableInfo } from '@/api/schemas'
+
+const connections = ref<ConnectionConfig[]>([])
+const selectedConnectionId = ref<number | null>(null)
+const tables = ref<TableInfo[]>([])
+
+onMounted(() => {
+  connectionsApi.list().then(data => {
+    connections.value = data
+    if (data.length > 0) {
+      selectedConnectionId.value = data[0].id!
+      loadTables(data[0].id!)
+    }
+  }).catch(() => {})
+})
+
+function loadTables(connectionId: number) {
+  schemasApi.listTables(connectionId).then(data => tables.value = data).catch(() => {})
+}
+
+function selectConnection(id: number) {
+  selectedConnectionId.value = id
+  tables.value = []
+  loadTables(id)
+}
+
+function goToTable(tableName: string) {
+  activeView.value = 'tables'
+}
 </script>
