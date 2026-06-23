@@ -157,13 +157,21 @@
                </h3>
                <div class="flex items-center gap-sm">
                  <div class="flex rounded-sm border border-outline-variant overflow-hidden bg-surface-container-low">
-                   <button class="px-3 py-1 bg-surface-variant border-r border-outline-variant text-on-surface text-body-sm font-bold hover:bg-surface-container-high transition-colors">Table View</button>
-                   <button class="px-3 py-1 bg-transparent text-on-surface-variant text-body-sm font-medium hover:bg-surface transition-colors">JSON View</button>
+                   <button @click="dataView = 'table'"
+                     class="px-3 py-1 text-body-sm font-bold transition-colors"
+                     :class="dataView === 'table' ? 'bg-surface-variant text-on-surface border-r border-outline-variant' : 'bg-transparent text-on-surface-variant hover:bg-surface'">
+                     Table View
+                   </button>
+                   <button @click="dataView = 'json'"
+                     class="px-3 py-1 text-body-sm font-bold transition-colors"
+                     :class="dataView === 'json' ? 'bg-surface-variant text-on-surface border-l border-outline-variant' : 'bg-transparent text-on-surface-variant hover:bg-surface'">
+                     JSON View
+                   </button>
                  </div>
                </div>
             </div>
 
-            <div v-if="previewData.length" class="overflow-x-auto custom-scrollbar bg-surface-container-lowest">
+            <div v-if="previewData.length && dataView === 'table'" class="overflow-x-auto custom-scrollbar bg-surface-container-lowest">
                <table class="w-full text-left border-collapse">
                  <thead class="bg-surface-container text-label-caps text-outline uppercase border-b border-outline-variant">
                    <tr>
@@ -179,8 +187,12 @@
                  </tbody>
                </table>
             </div>
-            <div v-else-if="selectedTable && !loading" class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">
+            <div v-else-if="selectedTable && !loading && dataView === 'table'" class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">
               No data available
+            </div>
+            <!-- JSON View -->
+            <div v-if="dataView === 'json' && previewData.length" class="bg-surface-container-lowest p-md">
+              <pre class="font-code-sm text-on-surface-variant whitespace-pre-wrap overflow-x-auto max-h-96 custom-scrollbar">{{ JSON.stringify(previewData, null, 2) }}</pre>
             </div>
          </div>
 
@@ -212,6 +224,22 @@
            </div>
          </div>
 
+         <!-- Change Log Tab -->
+         <div v-if="currentTab === 'changelog'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+           <div class="p-md border-b border-outline-variant bg-surface">
+             <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Recent Queries on {{ selectedTable }}</h3>
+           </div>
+           <div v-if="changelog.length" class="divide-y divide-outline-variant/20 bg-surface-container-lowest">
+             <div v-for="(entry, i) in changelog" :key="i" class="p-md hover:bg-surface-container-low transition-colors">
+               <pre class="font-code-sm text-on-surface whitespace-pre-wrap">{{ entry.sql }}</pre>
+               <p class="text-[11px] text-outline mt-1">{{ entry.createdAt }}</p>
+             </div>
+           </div>
+           <div v-else class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">
+             No query history for this table
+           </div>
+         </div>
+
        </div>
      </div>
   </div>
@@ -220,10 +248,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { schemasApi, type ColumnInfo } from '@/api/schemas'
+import { queryApi } from '@/api/query'
 import { connections, loadConnections, selectedConnectionId, selectedTable } from '@/store/app'
 
 const columns = ref<ColumnInfo[]>([])
 const foreignKeys = ref<Record<string, unknown>[]>([])
+const changelog = ref<{sql: string, createdAt: string}[]>([])
 const previewData = ref<Record<string, unknown>[]>([])
 const tableStats = ref<Record<string, unknown>>({})
 const loading = ref(false)
@@ -236,6 +266,7 @@ const tabs = [
 ] as const
 type TabId = (typeof tabs)[number]['id']
 const currentTab = ref<TabId>('schema')
+const dataView = ref<'table' | 'json'>('table')
 
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 
@@ -271,11 +302,19 @@ watch([selectedConnectionId, selectedTable], async ([connId, table]) => {
     previewData.value = data
     tableStats.value = stats
     foreignKeys.value = fks
+
+    try {
+      const history = await queryApi.history(connId)
+      changelog.value = history.filter((h: any) => h.sql?.toLowerCase().includes((table as string).toLowerCase())).slice(0, 10)
+    } catch {
+      changelog.value = []
+    }
   } catch {
     columns.value = []
     previewData.value = []
     tableStats.value = {}
     foreignKeys.value = []
+    changelog.value = []
   } finally {
     loading.value = false
   }
@@ -295,11 +334,15 @@ async function refresh() {
       previewData.value = data
       tableStats.value = stats
       foreignKeys.value = fks
+
+      const history = await queryApi.history(selectedConnectionId.value)
+      changelog.value = history.filter((h: any) => h.sql?.toLowerCase().includes((selectedTable.value as string).toLowerCase())).slice(0, 10)
     } catch {
       columns.value = []
       previewData.value = []
       tableStats.value = {}
       foreignKeys.value = []
+      changelog.value = []
     } finally {
       loading.value = false
     }
