@@ -120,11 +120,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const mockResults = ref([
-  { index: 1, id: 'USR_8829', username: 'alpha_coder', email: 'alpha@proton.me', orders: 142, revenue: '$12,450.00' },
-  { index: 2, id: 'USR_4410', username: 'dev_ops_ninja', email: 'ninja@gmail.com', orders: 98, revenue: '$8,210.50' },
-  { index: 3, id: 'USR_1022', username: 'skyline_blue', email: 'skyline@outlook.com', orders: 76, revenue: '$6,440.00' },
-  { index: 4, id: 'USR_9901', username: 'pixel_pusha', email: 'ppusha@fastmail.com', orders: 54, revenue: '$5,900.22' },
-  { index: 5, id: 'USR_2311', username: 'data_wizard', email: 'wizard@icloud.com', orders: 45, revenue: '$4,332.10' },
-])
+const mockResults = ref<{ index: number; id: string; username: string; email: string; orders: number; revenue: string }[]>([])
 </script>

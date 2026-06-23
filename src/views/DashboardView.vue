@@ -78,9 +78,9 @@
             </div>
           </div>
           <div class="flex-1 min-h-[220px] p-md flex items-end gap-sm relative group bg-surface">
-             <!-- Chart bars (mockup using CSS) -->
-             <div v-for="(h, i) in [80, 65, 90, 40, 55, 70, 85, 30, 45, 60]" :key="i" class="flex-1 bg-primary/90 hover:bg-primary transition-colors rounded-t-sm border-t border-outline-variant relative" :style="`height: ${h}%;`">
-                <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-highest text-on-surface text-code-sm px-2 py-1 rounded border border-outline-variant pointer-events-none transition-opacity whitespace-nowrap z-10 shadow-sm">{{h}}GB</div>
+             <!-- Chart bars: data from backend -->
+             <div class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm">
+                No storage data available
              </div>
           </div>
         </div>
@@ -89,8 +89,10 @@
         <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-xl flex flex-col">
           <span class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-md">Query Intensity</span>
           <div class="grid grid-cols-7 gap-[2px] flex-1">
-             <!-- Generative Heatmap cells -->
-             <div class="w-full aspect-square rounded-sm bg-primary" v-for="i in 28" :key="i" :style="`opacity: ${(Math.random() * 0.8) + 0.1}`" :title="`Load: ${Math.floor(Math.random() * 100)}%`"></div>
+             <!-- Heatmap cells: data from backend -->
+             <div class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm">
+                No query data available
+              </div>
           </div>
           <div class="mt-md pt-xs flex justify-between items-center text-code-sm font-code-sm text-outline border-t border-outline-variant/50">
             <span>Low</span>
@@ -133,11 +135,5 @@
 </template>
 
 <script setup lang="ts">
-const logs = [
-  { time: '14:22:01', user: 'admin_svc', stmt: "SELECT * FROM orders WHERE status = 'PENDING' LIMIT 100;", exec: '4ms', rows: '100' },
-  { time: '14:21:55', user: 'j_doe', stmt: "UPDATE inventory SET stock = stock - 1 WHERE id = 4920;", exec: '12ms', rows: '1' },
-  { time: '14:21:30', user: 'analyst_01', stmt: "EXPLAIN ANALYZE SELECT COUNT(*) FROM transactions GROUP BY region;", exec: '412ms', rows: '12' },
-  { time: '14:20:12', user: 'system', stmt: "VACUUM ANALYZE public.session_store;", exec: '1.2s', rows: '0' },
-  { time: '14:19:48', user: 'admin_svc', stmt: "INSERT INTO audit_log (user_id, action) VALUES (10, 'LOGIN');", exec: '2ms', rows: '1' },
-]
+const logs: { time: string; user: string; stmt: string; exec: string; rows: string }[] = []
 </script>
