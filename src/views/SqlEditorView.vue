@@ -116,17 +116,12 @@
       </div>
     </div>
 
-    <!-- Footer local to view -->
+    <!-- Footer -->
     <footer class="h-8 bg-surface-container border-t border-outline-variant flex justify-between items-center px-md py-xs z-50 shrink-0">
       <div class="flex items-center gap-md">
-        <span class="font-label-caps text-label-caps text-tertiary">Environment: PRODUCTION</span>
+        <span class="font-code-sm text-code-sm text-on-surface-variant">Finger Seal v0.1</span>
         <div class="h-3 w-[1px] bg-outline-variant"></div>
-        <span class="font-code-sm text-code-sm text-on-surface-variant">Executed in 12ms | 500 rows</span>
-      </div>
-      <div class="flex gap-md">
-        <a class="font-code-sm text-code-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
-        <a class="font-code-sm text-code-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Status</a>
-        <a class="font-code-sm text-code-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Release Notes</a>
+        <span class="font-code-sm text-code-sm text-on-surface-variant" v-if="results">{{ results.rows ? results.rows.length + ' rows' : results.affectedRows + ' rows affected' }} in {{ results.elapsedMs }}ms</span>
       </div>
     </footer>
   </div>

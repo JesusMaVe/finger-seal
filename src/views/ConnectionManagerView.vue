@@ -21,7 +21,7 @@
               class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
               :class="form.dbType === 'POSTGRESQL' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
               <div class="w-10 h-10 shrink-0 rounded bg-surface border border-outline-variant/30 flex items-center justify-center p-2 mt-0.5">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuADlqvHo3XphVkpQ-yR-1CrxlH8MfA_OJVyMv_9XAqY60X9xGxHk8y9JlkO1BFvvKRwUagkQXfZ_s4mZmkMf4FgxKLj3xUIzdoV-OECJx4SUOqu_OHkX4-kungQzZcyBOPB2OeJ3EfJUxHhLUiYSuDmM1Q_xzgmTsw5wc6nJv2oO5u1PeMhtTzbkSVt8WLC6b96MY-KoDfT2HE1-RZIyYbjlYTsZF0qOcQSJYrrKQQLf9ItIHYqlQRwAuQrfRTNbQ6I-tquThJ8-lM" class="w-full h-full object-contain filter grayscale invert opacity-80" />
+                <span class="material-symbols-outlined text-primary text-[22px]">database</span>
               </div>
               <div>
                 <p class="font-bold text-on-surface">PostgreSQL</p>
@@ -32,7 +32,7 @@
               class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
               :class="form.dbType === 'MYSQL' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
               <div class="w-10 h-10 shrink-0 rounded bg-surface-variant flex items-center justify-center p-2 mt-0.5 border border-transparent group-hover:border-outline-variant">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAesD-m8yRsMM5sLGsmE4DZ9LByWp_a3El7TNGXt87zT_LhD05wMhLVC_oprGUHn25fg4lfLLjDxEXCcN5hxMnnP7rMPH9o1NVNeGY5xu3a7DSgXDzG9zb4AExbcG565IxB9PSmKcaEs9FxNTkxjh0n5hETMj05F1hw8U0stp8YqrsVHbEUxefWuT29dAnyAoj5wl7LbMtmd5OSV8-ssGApxWu8tBnzWDVojgRkWAg1PBdP7SSVLUnC1euKn3ha8RxUUkfTFCnVkQs" class="w-full h-full object-contain filter grayscale invert opacity-60 group-hover:opacity-100" />
+                <span class="material-symbols-outlined text-secondary text-[22px]">storage</span>
               </div>
               <div>
                 <p class="font-bold text-on-surface">MySQL</p>
@@ -43,7 +43,7 @@
               class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
               :class="form.dbType === 'SQLITE' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
                <div class="w-10 h-10 shrink-0 rounded bg-surface-variant flex items-center justify-center p-2 mt-0.5 border border-transparent group-hover:border-outline-variant">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJb7Ls3pX9WlGKjL4nEzrXoFzwkZ5dCmCI1bUGkKVDKI80jFPK4pCj3Aeq8SMxqHuPbk7iM0KS0Mxm3fOZi14acnRFBjj39tuv8Zj3HLRhe1KMGZcdVA-aUwdc344XAXJzOk7ovisJg2PAwMjb0jPghEcdgFqV3j3K6t10HWtkyQ4WDRY0HBJ9lh3jY0CM-PHawCi3jVKwvMOhSoXabJup0KcLMvK51h8nrVQVFVJyHDYHCLpSH_wvxPpx72Vx_qd38X-lopWXuYU" class="w-full h-full object-contain filter grayscale invert opacity-60 group-hover:opacity-100" />
+                <span class="material-symbols-outlined text-tertiary text-[22px]">dataset</span>
               </div>
               <div>
                 <p class="font-bold text-on-surface">SQLite</p>
