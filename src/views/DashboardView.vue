@@ -158,6 +158,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { connections, selectedConnectionId, wsConnected, wsLogs } from '@/store/app'
+import { schemasApi } from '@/api/schemas'
 
 const metrics = ref<Record<string, any>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
@@ -165,8 +166,7 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 async function loadMetrics() {
   if (!selectedConnectionId.value) return
   try {
-    const resp = await fetch(`http://localhost:8080/api/connections/${selectedConnectionId.value}/metrics`)
-    metrics.value = await resp.json()
+    metrics.value = await schemasApi.dashboardMetrics(selectedConnectionId.value)
   } catch {}
 }
 

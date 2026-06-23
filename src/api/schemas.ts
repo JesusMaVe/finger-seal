@@ -29,4 +29,7 @@ export const schemasApi = {
 
   tableForeignKeys: (connectionId: number, tableName: string) =>
     apiFetch<Record<string, unknown>[]>(`/connections/${connectionId}/schemas/tables/${encodeURIComponent(tableName)}/foreign-keys`),
+
+  dashboardMetrics: (connectionId: number) =>
+    apiFetch<Record<string, any>>(`/connections/${connectionId}/metrics`),
 };
