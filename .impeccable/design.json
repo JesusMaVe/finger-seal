@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-22T23:50:00.000Z",
+  "title": "Design System: Finger Seal",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Teal Técnico",
+        "canonical": "oklch(0.52 0.09 195)",
+        "tonalRamp": [
+          "oklch(0.15 0.07 195)",
+          "oklch(0.25 0.09 195)",
+          "oklch(0.35 0.10 195)",
+          "oklch(0.42 0.10 195)",
+          "oklch(0.52 0.09 195)",
+          "oklch(0.62 0.08 195)",
+          "oklch(0.75 0.06 195)",
+          "oklch(0.90 0.03 195)"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Verde Industrial",
+        "canonical": "oklch(0.56 0.04 185)",
+        "tonalRamp": [
+          "oklch(0.15 0.03 185)",
+          "oklch(0.25 0.04 185)",
+          "oklch(0.36 0.04 185)",
+          "oklch(0.46 0.04 185)",
+          "oklch(0.56 0.04 185)",
+          "oklch(0.67 0.03 185)",
+          "oklch(0.78 0.02 185)",
+          "oklch(0.92 0.01 185)"
+        ]
+      },
+      "tertiary": {
+        "role": "tertiary",
+        "displayName": "Tierra Oliva",
+        "canonical": "oklch(0.50 0.06 80)",
+        "tonalRamp": [
+          "oklch(0.15 0.04 80)",
+          "oklch(0.25 0.05 80)",
+          "oklch(0.35 0.06 80)",
+          "oklch(0.43 0.06 80)",
+          "oklch(0.50 0.06 80)",
+          "oklch(0.60 0.05 80)",
+          "oklch(0.75 0.03 80)",
+          "oklch(0.90 0.01 80)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Ceniza Cálida",
+        "canonical": "oklch(0.96 0.005 85)",
+        "tonalRamp": [
+          "oklch(0.10 0.003 85)",
+          "oklch(0.22 0.004 85)",
+          "oklch(0.36 0.005 85)",
+          "oklch(0.50 0.005 85)",
+          "oklch(0.64 0.005 85)",
+          "oklch(0.78 0.004 85)",
+          "oklch(0.88 0.004 85)",
+          "oklch(0.96 0.005 85)"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "displayName": "Alerta",
+        "canonical": "oklch(0.50 0.20 30)",
+        "tonalRamp": [
+          "oklch(0.15 0.15 30)",
+          "oklch(0.25 0.18 30)",
+          "oklch(0.35 0.20 30)",
+          "oklch(0.42 0.20 30)",
+          "oklch(0.50 0.20 30)",
+          "oklch(0.62 0.15 30)",
+          "oklch(0.78 0.10 30)",
+          "oklch(0.92 0.05 30)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Dashboard section titles, welcome screens. Rare." },
+      "headline": { "displayName": "Headline", "purpose": "Card titles, panel headers, dialog headings." },
+      "title": { "displayName": "Title", "purpose": "Component titles, nav headers, sidebar item labels." },
+      "body": { "displayName": "Body", "purpose": "All running text, table cells, descriptions." },
+      "label": { "displayName": "Label / Caps", "purpose": "Badges, chip labels, metadata headers, section tags." },
+      "code": { "displayName": "Code", "purpose": "SQL textareas, query results, code values." }
+    },
+    "shadows": [
+      { "name": "hover-lift", "value": "0 4px 12px rgba(0,0,0,0.06)", "purpose": "Card hover elevation." },
+      { "name": "modal", "value": "0 8px 30px rgba(0,0,0,0.12)", "purpose": "Modal backdrops, dropdown menus, popovers." },
+      { "name": "sticky-header", "value": "0 2px 8px rgba(0,0,0,0.04)", "purpose": "Sticky table headers." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0, 0, 0.2, 1)", "purpose": "Default easing for state transitions (fade, lift)." },
+      { "name": "fade-in-duration", "value": "300ms", "purpose": "Page entrance animation." },
+      { "name": "hover-lift-duration", "value": "150ms", "purpose": "Card hover lift animation." },
+      { "name": "toast-in-duration", "value": "250ms", "purpose": "Toast notification entrance." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "640px" },
+      { "name": "tablet", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button. Used for queries, saving, confirming. Solid teal, white text, 4px radius.",
+      "html": "<button class=\"ds-btn-primary\"><span class=\"ds-icon\">play_arrow</span>Run Query</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #0d7377; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1.4; border: none; border-radius: 4px; cursor: pointer; transition: background 0.15s ease, opacity 0.15s ease; } .ds-btn-primary:hover { background: #0b6367; } .ds-btn-primary:active { opacity: 0.8; } .ds-icon { font-family: 'Material Symbols Outlined'; font-size: 18px; font-variation-settings: 'FILL' 0, 'wght' 400; line-height: 1; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action button. Uses secondary-container background. For less prominent actions.",
+      "html": "<button class=\"ds-btn-secondary\">Save</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #d6e8e5; color: #172624; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.4; border: none; border-radius: 4px; cursor: pointer; transition: background 0.15s ease; } .ds-btn-secondary:hover { background: #c5d8d5; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-urgency inline actions — Clear, Edit, Remove. No background, text-only.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: transparent; color: #5a5a52; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.4; border: 1px solid transparent; border-radius: 4px; cursor: pointer; transition: color 0.15s ease; } .ds-btn-ghost:hover { color: #1c1c1a; }"
+    },
+    {
+      "name": "Card / Container",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Info/grouping card. Rounded, warm container-low background, border, optional hover-lift.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><span class=\"ds-card-icon material-symbols-outlined\">table_rows</span><h3 class=\"ds-card-title\">Data Preview</h3></div><p class=\"ds-card-body\">Showing top 100 rows from ventas</p></div>",
+      "css": ".ds-card { background: #efefe9; border: 1px solid #c8c8be; border-radius: 12px; padding: 16px; transition: transform 0.15s ease, box-shadow 0.15s ease; } .ds-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); } .ds-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .ds-card-icon { font-family: 'Material Symbols Outlined'; font-size: 20px; color: #7a7a72; line-height: 1; } .ds-card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 600; color: #1c1c1a; line-height: 1.4; } .ds-card-body { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; color: #5a5a52; line-height: 1.5; }"
+    },
+    {
+      "name": "Input / Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text input with border-focus state. No border at rest, primary border on focus.",
+      "html": "<div class=\"ds-input-group\"><label class=\"ds-label\">Table Name</label><input class=\"ds-input\" type=\"text\" placeholder=\"Enter table name\" /></div>",
+      "css": ".ds-input-group { display: flex; flex-direction: column; gap: 4px; } .ds-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: #7a7a72; } .ds-input { padding: 8px 12px; background: #f5f5f0; color: #1c1c1a; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; border: 1px solid #c8c8be; border-radius: 4px; outline: none; transition: border-color 0.15s ease; } .ds-input:focus { border-color: #0d7377; } .ds-input::placeholder { color: #5a5a52; opacity: 0.6; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item-default",
+      "description": "Navigation item in sidebar. Default and active states documented.",
+      "html": "<nav><a class=\"ds-nav-item\"><span class=\"ds-nav-icon material-symbols-outlined\">table</span>Tables</a><a class=\"ds-nav-item ds-nav-item-active\"><span class=\"ds-nav-icon material-symbols-outlined\">code</span>Queries</a></nav>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 500; color: #5a5a52; text-decoration: none; border-radius: 4px; transition: all 0.15s ease; height: 32px; } .ds-nav-item:hover { background: #e8e8e2; color: #1c1c1a; } .ds-nav-item-active { background: #d6e8e5; color: #172624; font-weight: 600; } .ds-nav-icon { font-family: 'Material Symbols Outlined'; font-size: 16px; line-height: 1; }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Query results data grid. Sticky header, alternating rows, code-font data cells.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>id</th><th>producto</th><th>cantidad</th><th>precio</th></tr></thead><tbody><tr class=\"ds-row-even\"><td>1</td><td>Laptop Lenovo</td><td>2</td><td>18500.00</td></tr><tr><td>2</td><td>Mouse Inalámbrico</td><td>5</td><td>350.50</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; } .ds-table thead { position: sticky; top: 0; z-index: 10; } .ds-table th { background: #e0e0d8; color: #7a7a72; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; padding: 8px 12px; } .ds-table td { padding: 6px 12px; border-bottom: 1px solid #c8c8be; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; color: #1c1c1a; } .ds-row-even td { background: rgba(0,0,0,0.02); } .ds-table tr:hover td { background: rgba(13, 115, 119, 0.04); }"
+    },
+    {
+      "name": "Chip / Tag",
+      "kind": "chip",
+      "refersTo": "nav-item-default",
+      "description": "Metadata tag or filter chip. Rounded small, container-variant background.",
+      "html": "<span class=\"ds-chip\">INNER JOIN</span><span class=\"ds-chip ds-chip-active\">SELECT</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; padding: 2px 8px; background: #e8e8e2; color: #5a5a52; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.75rem; font-weight: 500; border: 1px solid #c8c8be; border-radius: 4px; line-height: 1.4; } .ds-chip-active { background: #b2dfdb; color: #002b29; border-color: #b2dfdb; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La Consola del Constructor",
+    "overview": "Finger Seal is a developer console for a weekend builder. It feels like a well-organized workbench — tools within reach, surfaces clear, a place where focus lives. The interface doesn't perform; it enables. Every pixel serves the developer's query, their schema map, their connection health.\n\nThe system uses restrained confidence: teal as a sharp, purposeful accent applied sparingly (buttons, active states, key highlights) against a warm neutral ground with generous whitespace. Containers stack with subtle tonal layering and soft elevation shadows — enough depth to feel crafted, not enough to distract. The typography is quiet and capable: Plus Jakarta Sans for clean UI, JetBrains Mono for precise code.\n\nThis system explicitly rejects: legacy database tool clutter (too many toolbars, tiny fonts, 90s icons), dense observability dashboards (everything screaming for attention at once), and forced dark mode. The interface adapts to the OS; the user chooses the override.",
+    "keyCharacteristics": [
+      "Warm neutral ground with teal precision — the teal is rare enough to matter",
+      "Tonal layering with soft elevation, not just borders",
+      "Generous whitespace as an active design tool, not empty space",
+      "Typography-first hierarchy: scale and weight do the work, not color",
+      "Flat surfaces at rest, lifted on hover — micro-elevation as interaction feedback",
+      "System-adaptive light/dark with manual toggle; no default allegiance"
+    ],
+    "rules": [
+      { "name": "The Teal Threshold Rule", "body": "Teal appears on ≤10% of any screen. If a design passes 10%, re-home elements to secondary or container colors. Teal's rarity is its power.", "section": "colors" },
+      { "name": "The Mono Precision Rule", "body": "Code is always in JetBrains Mono, never in the UI font. SQL keywords, identifiers, function names, and data values all use the code face when they represent data, not interface labels.", "section": "typography" },
+      { "name": "The Flat-Before-Elevation Rule", "body": "All surfaces are flat at rest. Shadows are interaction responses, not default styling. A card without hover shadow is correct; a card with a resting shadow is wrong unless it's a modal.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use the teal accent sparingly (≤10% of screen area). Its rarity is its signal.",
+      "Do prefer surface-container-low cards with hover-lift over flat lists when grouping related information.",
+      "Do let whitespace breathe. 16px padding inside cards, 24px between sections, generous margins.",
+      "Do use secondary-container for active nav items and selected states — it's calm enough to fill broader areas than primary.",
+      "Do format SQL keywords with the .sql-keyword class (primary color, 700 weight) for legibility.",
+      "Do respect the system theme. The manual toggle exists for the user, not for the designer."
+    ],
+    "donts": [
+      "Don't create a legacy database tool look: cluttered toolbars, 90s icons, cramped spacing, small fonts — anything that signals pgAdmin or DBeaver.",
+      "Don't build dense, dark observability dashboards like Grafana or Datadog — too much information competing for attention at once.",
+      "Don't force dark mode. Dark surfaces are the user's choice, not the default.",
+      "Don't use side-stripe borders (border-left: 3px solid primary on cards or list items).",
+      "Don't use gradient text (background-clip: text). Emphasis comes from weight and size.",
+      "Don't use glassmorphism (frosted glass with backdrop blur) as a decorative default.",
+      "Don't use the hero-metric template (big number, small label, supporting stats, gradient accent).",
+      "Don't use identical card grids (same-sized cards with icon + heading + text repeated endlessly).",
+      "Don't use modals as the first interaction thought. Inline and progressive alternatives come first.",
+      "Don't use em dashes (—) in copy. Use commas, colons, semicolons, or parentheses."
+    ]
+  }
+}
