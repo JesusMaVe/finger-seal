@@ -97,7 +97,7 @@ public class DashboardController {
                         row.put("bytes", rs.getLong("bytes"));
                         return row;
                     });
-                case "ORACLE" -> jdbc.query("SELECT segment_name AS name, SUM(bytes) AS bytes FROM user_segments GROUP BY segment_name ORDER BY bytes DESC FETCH FIRST 10 ROWS ONLY",
+                case "ORACLE" -> jdbc.query("SELECT t.table_name AS name, COALESCE(SUM(s.bytes), 0) AS bytes FROM user_tables t LEFT JOIN user_segments s ON s.segment_name = t.table_name GROUP BY t.table_name ORDER BY bytes DESC FETCH FIRST 10 ROWS ONLY",
                     (rs, i) -> {
                         Map<String, Object> row = new LinkedHashMap<>();
                         row.put("name", rs.getString("name"));
