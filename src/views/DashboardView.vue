@@ -239,11 +239,11 @@ const heatmapWeeks = computed(() => {
     const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
     sessionCounts[key] = (sessionCounts[key] || 0) + 1
   }
-  // Find the Monday of the week containing (today - 27 days) ago
+  // Start from Monday of current week, go back 3 weeks (total 4 rows)
   const weekStart = new Date(today)
-  weekStart.setDate(weekStart.getDate() - 27)
   const dow = weekStart.getDay() // 0=Sun
-  weekStart.setDate(weekStart.getDate() + (dow === 0 ? -6 : 1 - dow)) // back to Monday
+  weekStart.setDate(weekStart.getDate() + (dow === 0 ? -6 : 1 - dow)) // back to Monday of this week
+  weekStart.setDate(weekStart.getDate() - 21) // 3 weeks back
   // Build 4 weeks of 7 days
   const weeks: { day: string; count: number; isFuture: boolean }[][] = []
   for (let w = 0; w < 4; w++) {
