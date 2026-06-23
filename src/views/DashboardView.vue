@@ -4,8 +4,8 @@
       <!-- Dashboard Header -->
       <div class="flex justify-between items-end mb-sm">
         <div>
-          <h1 class="font-headline-lg text-headline-lg text-on-surface">Performance Overview</h1>
-          <p class="font-body-md text-body-md text-on-surface-variant mt-xs">{{ currentConn?.name ? currentConn.name + ' (' + currentConn.dbType + ')' : 'No connection selected' }}</p>
+          <h1 class="font-headline-lg text-headline-lg text-on-surface">{{ currentConn ? currentConn.database + ' · ' + currentConn.dbType : 'Performance Overview' }}</h1>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-xs">{{ currentConn ? currentConn.host + ':' + currentConn.port + ' · ' + (metrics.tableCount ?? '?') + ' tables · ' + formatBytes(metrics.storageBytes) : 'No connection selected' }}</p>
         </div>
         <div class="flex gap-sm">
           <div class="flex items-center gap-xs bg-surface-container-low px-sm py-xs rounded border border-outline-variant shadow-sm shadow-black/5">
