@@ -149,7 +149,7 @@
          </div>
 
          <!-- Data Preview Section Layout -->
-         <div v-if="currentTab === 'data'" class="col-span-12 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden mt-sm mb-xl">
+         <div v-if="currentTab === 'data'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
             <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
                <h3 class="font-headline-md text-[18px] font-bold text-on-surface flex items-center gap-xs">
                   <span class="material-symbols-outlined text-outline">table_rows</span>
