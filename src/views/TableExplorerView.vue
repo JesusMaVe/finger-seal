@@ -143,7 +143,13 @@
                  <span class="material-symbols-outlined text-outline text-[20px]">history</span>
                  Activity Log
               </h3>
-              <div class="flex items-center justify-center h-full text-on-surface-variant font-body-sm italic">
+              <div v-if="changelog.length" class="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+                <div v-for="(entry, i) in changelog.slice(0, 5)" :key="i" class="bg-surface p-sm rounded border border-outline-variant/40">
+                  <code class="font-code-sm text-code-sm text-on-surface truncate block">{{ entry.sql }}</code>
+                  <p class="text-[10px] text-outline mt-1">{{ formatTimestamp(entry.createdAt) }}</p>
+                </div>
+              </div>
+              <div v-else class="flex items-center justify-center h-full text-on-surface-variant font-body-sm italic">
                 No recent activity
               </div>
            </div>
@@ -233,7 +239,7 @@
            <div v-if="changelog.length" class="divide-y divide-outline-variant/20 bg-surface-container-lowest">
              <div v-for="(entry, i) in changelog" :key="i" class="p-md hover:bg-surface-container-low transition-colors">
                <pre class="font-code-sm text-on-surface whitespace-pre-wrap">{{ entry.sql }}</pre>
-               <p class="text-[11px] text-outline mt-1">{{ entry.createdAt }}</p>
+               <p class="text-[11px] text-outline mt-1">{{ formatTimestamp(entry.createdAt) }}</p>
              </div>
            </div>
            <div v-else class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">
@@ -393,6 +399,14 @@ function escapeCsv(val: string): string {
     return `"${val.replace(/"/g, '""')}"`
   }
   return val
+}
+
+function formatTimestamp(ts: string): string {
+  try {
+    return new Date(ts).toLocaleString()
+  } catch {
+    return ts
+  }
 }
 
 function queryTable() {

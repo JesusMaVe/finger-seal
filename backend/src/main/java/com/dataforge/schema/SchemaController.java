@@ -123,7 +123,7 @@ public class SchemaController {
             case "POSTGRESQL" -> "SELECT reltuples::bigint AS row_count, pg_size_pretty(pg_total_relation_size(?)) AS total_size, pg_size_pretty(pg_indexes_size(?)) AS index_size FROM pg_class WHERE relname = ?";
             case "MYSQL" -> "SELECT TABLE_ROWS AS row_count, ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS total_size_mb, ROUND(INDEX_LENGTH / 1024 / 1024, 1) AS index_size_mb FROM information_schema.tables WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()";
             case "SQLITE" -> "SELECT COUNT(*) AS row_count, 'N/A' AS total_size FROM " + tableName;
-            case "ORACLE" -> "SELECT num_rows AS \"row_count\", 'N/A' AS \"total_size\" FROM user_tables WHERE table_name = ?";
+            case "ORACLE" -> "SELECT COUNT(*) AS \"row_count\", COALESCE((SELECT SUM(bytes) FROM user_segments WHERE segment_name = ?), 0) AS \"total_size\" FROM " + tableName;
             default -> throw new IllegalArgumentException("Unsupported DB type");
         };
         if (config.getDbType().equals("POSTGRESQL")) {
