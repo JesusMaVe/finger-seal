@@ -131,4 +131,27 @@ public class SchemaController {
         }
         return jdbc.queryForMap(sql, tableName);
     }
+
+    @GetMapping("/tables/{tableName}/foreign-keys")
+    public List<Map<String, Object>> tableForeignKeys(@PathVariable Long id, @PathVariable String tableName) throws SQLException {
+        ConnectionConfig config = connectionRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
+        DataSource ds = dataSourceManager.getOrCreate(config);
+        List<Map<String, Object>> fks = new ArrayList<>();
+        try (Connection conn = ds.getConnection()) {
+            var meta = conn.getMetaData();
+            String schema = config.getDbType().equals("POSTGRESQL") ? "public" : null;
+            try (var rs = meta.getImportedKeys(null, schema, tableName)) {
+                while (rs.next()) {
+                    Map<String, Object> fk = new LinkedHashMap<>();
+                    fk.put("pk_table", rs.getString("PKTABLE_NAME"));
+                    fk.put("pk_column", rs.getString("PKCOLUMN_NAME"));
+                    fk.put("fk_column", rs.getString("FKCOLUMN_NAME"));
+                    fk.put("fk_name", rs.getString("FK_NAME"));
+                    fks.add(fk);
+                }
+            }
+        }
+        return fks;
+    }
 }

@@ -184,6 +184,34 @@
             </div>
          </div>
 
+         <!-- Relationships Tab -->
+         <div v-if="currentTab === 'relationships'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+           <div class="p-md border-b border-outline-variant bg-surface">
+             <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Foreign Keys</h3>
+           </div>
+           <table v-if="foreignKeys.length" class="w-full text-left border-collapse bg-surface-container-lowest">
+             <thead class="bg-surface-container text-label-caps text-outline uppercase border-b border-outline-variant">
+               <tr>
+                 <th class="px-md py-sm font-bold">FK Column</th>
+                 <th class="px-md py-sm font-bold">References</th>
+                 <th class="px-md py-sm font-bold">PK Column</th>
+                 <th class="px-md py-sm font-bold">Constraint</th>
+               </tr>
+             </thead>
+             <tbody class="divide-y divide-outline-variant/20 font-code-sm">
+               <tr v-for="(fk, i) in foreignKeys" :key="i" class="hover:bg-surface-container-low transition-colors">
+                 <td class="px-md py-sm text-on-surface">{{ fk.fk_column }}</td>
+                 <td class="px-md py-sm text-primary">→ {{ fk.pk_table }}</td>
+                 <td class="px-md py-sm text-on-surface-variant">{{ fk.pk_column }}</td>
+                 <td class="px-md py-sm text-outline">{{ fk.fk_name || '-' }}</td>
+               </tr>
+             </tbody>
+           </table>
+           <div v-else class="flex items-center justify-center h-32 text-on-surface-variant font-body-sm italic">
+             No foreign key relationships found for this table
+           </div>
+         </div>
+
        </div>
      </div>
   </div>
@@ -195,6 +223,7 @@ import { schemasApi, type ColumnInfo } from '@/api/schemas'
 import { connections, loadConnections, selectedConnectionId, selectedTable } from '@/store/app'
 
 const columns = ref<ColumnInfo[]>([])
+const foreignKeys = ref<Record<string, unknown>[]>([])
 const previewData = ref<Record<string, unknown>[]>([])
 const tableStats = ref<Record<string, unknown>>({})
 const loading = ref(false)
@@ -218,6 +247,7 @@ onMounted(loadConnections)
 
 watch(selectedConnectionId, () => {
   columns.value = []
+  foreignKeys.value = []
   previewData.value = []
   tableStats.value = {}
 })
@@ -231,18 +261,21 @@ watch([selectedConnectionId, selectedTable], async ([connId, table]) => {
   }
   loading.value = true
   try {
-    const [cols, data, stats] = await Promise.all([
+    const [cols, data, stats, fks] = await Promise.all([
       schemasApi.tableColumns(connId, table),
       schemasApi.tableData(connId, table, 100),
       schemasApi.tableStats(connId, table),
+      schemasApi.tableForeignKeys(connId, table),
     ])
     columns.value = cols
     previewData.value = data
     tableStats.value = stats
+    foreignKeys.value = fks
   } catch {
     columns.value = []
     previewData.value = []
     tableStats.value = {}
+    foreignKeys.value = []
   } finally {
     loading.value = false
   }
@@ -252,18 +285,21 @@ async function refresh() {
   if (selectedTable.value && selectedConnectionId.value) {
     loading.value = true
     try {
-      const [cols, data, stats] = await Promise.all([
+      const [cols, data, stats, fks] = await Promise.all([
         schemasApi.tableColumns(selectedConnectionId.value, selectedTable.value),
         schemasApi.tableData(selectedConnectionId.value, selectedTable.value, 100),
         schemasApi.tableStats(selectedConnectionId.value, selectedTable.value),
+        schemasApi.tableForeignKeys(selectedConnectionId.value, selectedTable.value),
       ])
       columns.value = cols
       previewData.value = data
       tableStats.value = stats
+      foreignKeys.value = fks
     } catch {
       columns.value = []
       previewData.value = []
       tableStats.value = {}
+      foreignKeys.value = []
     } finally {
       loading.value = false
     }
