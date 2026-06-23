@@ -94,8 +94,10 @@ public class SchemaController {
                 .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
         DataSource ds = dataSourceManager.getOrCreate(config);
         JdbcTemplate jdbc = new JdbcTemplate(ds);
-        // ponytail: naive LIMIT works for PG, MySQL, SQLite
-        String sql = "SELECT * FROM " + tableName + " LIMIT " + limit;
+        String sql = switch (config.getDbType()) {
+            case "ORACLE" -> "SELECT * FROM " + tableName + " FETCH FIRST " + limit + " ROWS ONLY";
+            default -> "SELECT * FROM " + tableName + " LIMIT " + limit;
+        };
         return jdbc.query(sql, (ResultSet rs) -> {
             ResultSetMetaData meta = rs.getMetaData();
             int colCount = meta.getColumnCount();
