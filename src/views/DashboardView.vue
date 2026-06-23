@@ -208,13 +208,13 @@ const queryMaxCount = computed(() => {
 
 // Real-time heatmap from wsLogs (ignored by backend, computed client-side)
 const heatmapData = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  // Count queries per day from wsLogs
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // Count queries per day from wsLogs (local tz)
   const counts: Record<string, number> = {}
   for (const log of wsLogs.value) {
     const d = new Date(log.timestamp)
-    const key = d.toISOString().slice(0, 10)
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
     counts[key] = (counts[key] || 0) + 1
   }
   // Build 28-day array
@@ -222,7 +222,7 @@ const heatmapData = computed(() => {
   for (let i = 27; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
     result.push({ day: key, count: counts[key] || 0 })
   }
   return result
