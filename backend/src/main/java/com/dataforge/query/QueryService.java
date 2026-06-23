@@ -2,6 +2,7 @@ package com.dataforge.query;
 
 import com.dataforge.connection.ConnectionConfig;
 import com.dataforge.connection.ConnectionRepository;
+import com.dataforge.ws.EventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
@@ -18,11 +19,13 @@ public class QueryService {
     private final ConnectionRepository connectionRepo;
     private final DataSourceManager dataSourceManager;
     private final QueryHistoryRepository historyRepo;
+    private final EventPublisher eventPublisher;
 
-    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo) {
+    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo, EventPublisher eventPublisher) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
         this.historyRepo = historyRepo;
+        this.eventPublisher = eventPublisher;
     }
 
     public QueryResult execute(QueryRequest request) {
@@ -47,6 +50,13 @@ public class QueryService {
                 result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
                 null
             ));
+            eventPublisher.queryExecuted(
+                request.getConnectionId(), request.getSql(),
+                "SUCCESS",
+                result.getElapsedMs(),
+                result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
+                null
+            );
             return result;
         } catch (Exception e) {
             long elapsed = System.currentTimeMillis() - start;
@@ -55,6 +65,13 @@ public class QueryService {
                 request.getConnectionId(), request.getSql(), "ERROR",
                 elapsed, null, e.getMessage()
             ));
+            eventPublisher.queryExecuted(
+                request.getConnectionId(), request.getSql(),
+                "ERROR",
+                elapsed,
+                null,
+                e.getMessage()
+            );
             return result;
         }
     }
