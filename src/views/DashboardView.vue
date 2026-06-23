@@ -70,12 +70,7 @@
         <!-- Large Storage Usage Chart Card -->
         <div class="md:col-span-3 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col">
           <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container/30">
-            <span class="font-headline-md text-headline-md text-on-surface">Database Storage Distribution</span>
-            <div class="flex gap-xs">
-               <span class="px-2 py-1 rounded-sm bg-surface-variant border border-outline-variant/50 text-code-sm font-bold text-on-surface">Data</span>
-               <span class="px-2 py-1 rounded-sm bg-surface text-code-sm border border-outline-variant/30 text-on-surface-variant">Index</span>
-               <span class="px-2 py-1 rounded-sm bg-surface-container-highest border border-outline-variant/30 text-code-sm text-on-surface-variant">Free</span>
-            </div>
+            <span class="font-headline-md text-headline-md text-on-surface">Storage by Table</span>
           </div>
           <div class="flex-1 min-h-[220px] p-md flex items-end gap-sm relative group bg-surface">
              <!-- Chart bars: data from backend -->
