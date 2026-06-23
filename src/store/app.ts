@@ -18,6 +18,7 @@ export function applyTheme(t: Theme) {
 export const isSidebarCollapsed = ref(false)
 export const selectedConnectionId = ref<number | null>(null)
 export const selectedTable = ref<string>('')
+export const pendingQuery = ref('')
 export const connections = ref<ConnectionConfig[]>([])
 
 export function loadConnections() {

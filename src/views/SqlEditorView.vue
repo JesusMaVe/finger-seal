@@ -130,7 +130,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
-import { connections, loadConnections, selectedConnectionId } from '@/store/app'
+import { connections, loadConnections, selectedConnectionId, pendingQuery } from '@/store/app'
 
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 const sql = ref(`SELECT
@@ -152,6 +152,13 @@ watch(selectedConnectionId, async (id) => {
     history.value = await queryApi.history(id)
   } catch { history.value = [] }
 }, { immediate: true })
+
+watch(pendingQuery, (q) => {
+  if (q) {
+    sql.value = q
+    pendingQuery.value = ''
+  }
+})
 
 async function runQuery() {
   if (!selectedConnectionId.value || !sql.value.trim()) return

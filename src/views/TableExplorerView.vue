@@ -33,7 +33,8 @@
               <span class="material-symbols-outlined text-[18px]">download</span>
               Export
            </button>
-           <button class="bg-primary text-on-primary px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-bold shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
+           <button @click="queryTable"
+  class="bg-primary text-on-primary px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-bold shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
               <span class="material-symbols-outlined text-[18px]">play_arrow</span>
               Query Table
            </button>
@@ -249,7 +250,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { schemasApi, type ColumnInfo } from '@/api/schemas'
 import { queryApi } from '@/api/query'
-import { connections, loadConnections, selectedConnectionId, selectedTable } from '@/store/app'
+import { connections, loadConnections, selectedConnectionId, selectedTable, activeView, pendingQuery } from '@/store/app'
 
 const columns = ref<ColumnInfo[]>([])
 const foreignKeys = ref<Record<string, unknown>[]>([])
@@ -374,5 +375,11 @@ function escapeCsv(val: string): string {
     return `"${val.replace(/"/g, '""')}"`
   }
   return val
+}
+
+function queryTable() {
+  if (!selectedTable.value) return
+  pendingQuery.value = `SELECT * FROM ${selectedTable.value} LIMIT 100`
+  activeView.value = 'queries'
 }
 </script>
