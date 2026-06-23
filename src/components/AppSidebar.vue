@@ -114,7 +114,7 @@ watch(selectedConnectionId, (id) => {
   selectedTable.value = ''
   if (!id) return
   schemasApi.listTables(id).then(data => tables.value = data).catch(() => {})
-})
+}, { immediate: true })
 
 function goToTable(tableName: string) {
   selectedTable.value = tableName
