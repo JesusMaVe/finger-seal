@@ -17,28 +17,29 @@
 
       <!-- Bento Grid Status Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-md">
-        <!-- CPU Health -->
+        <!-- Active Queries -->
         <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default">
           <div class="flex justify-between items-start">
-            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">CPU Usage</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Active Queries</span>
             <span class="material-symbols-outlined text-primary text-[20px]">memory</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-on-surface">—</div>
+            <div class="font-headline-lg text-[28px] text-on-surface">{{ metrics.activeQueries ?? '—' }}</div>
             <div class="w-full bg-surface-variant h-1 rounded-full mt-2 overflow-hidden flex">
+              <div class="h-full bg-primary rounded-full transition-all duration-500" :style="{ width: Math.min((metrics.activeQueries ?? 0) / 10 * 100, 100) + '%' }"></div>
             </div>
           </div>
         </div>
-        <!-- RAM Health -->
+        <!-- Transactions -->
         <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default">
           <div class="flex justify-between items-start">
-            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Memory usage</span>
-            <span class="material-symbols-outlined text-primary text-[20px]">memory_alt</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Transactions</span>
+            <span class="material-symbols-outlined text-primary text-[20px]">sync_alt</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-on-surface">— <span class="text-body-sm text-on-surface-variant">/ —</span></div>
-            <div class="w-full bg-surface-variant h-1 rounded-full mt-2 overflow-hidden">
-            </div>
+            <div class="font-headline-lg text-[28px] text-on-surface">{{ metrics.transactions != null ? metrics.transactions.toLocaleString() : '—' }}</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-if="selectedConnectionId">Total since DB start</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-else>Connect to a database</div>
           </div>
         </div>
         <!-- Connections -->
@@ -49,19 +50,20 @@
           </div>
           <div>
             <div class="font-headline-lg text-[28px] text-primary">{{ connections.length }}</div>
-            <div class="font-code-sm text-code-sm text-outline">saved connections</div>
+            <div class="font-code-sm text-code-sm text-outline">{{ metrics.tableCount ?? connections.length }} tables</div>
           </div>
         </div>
         <!-- Storage -->
         <div class="md:col-span-1 bg-surface-container-high p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default relative overflow-hidden">
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-outline-variant to-transparent opacity-50"></div>
           <div class="flex justify-between items-start">
-            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Disk IOPS</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Storage Used</span>
             <span class="material-symbols-outlined text-primary text-[20px]">storage</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-primary">—</div>
-            <div class="font-body-sm text-body-sm text-on-surface-variant italic">Connect to a database</div>
+            <div class="font-headline-lg text-[28px] text-primary">{{ formatBytes(metrics.storageBytes) }}</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-if="metrics.tableCount != null">{{ metrics.tableCount }} tables</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-else>Connect to a database</div>
           </div>
         </div>
 
@@ -77,7 +79,17 @@
           </div>
           <div class="flex-1 min-h-[220px] p-md flex items-end gap-sm relative group bg-surface">
              <!-- Chart bars: data from backend -->
-             <div class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm">
+             <div v-if="metrics.storageBreakdown?.length" class="flex items-end gap-1 w-full h-full">
+               <div v-for="(item, i) in metrics.storageBreakdown" :key="i"
+                 class="flex-1 bg-primary/70 rounded-t-sm hover:bg-primary hover:opacity-80 transition-all cursor-pointer relative group/item min-w-[12px]"
+                 :style="{ height: Math.max((item.bytes / (metrics.storageBreakdown?.[0]?.bytes * 1.1 || 1)) * 100, 4) + '%' }"
+                 :title="item.name + ': ' + formatBytes(item.bytes)">
+                 <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] px-2 py-0.5 rounded opacity-0 group-hover/item:opacity-100 transition-opacity whitespace-nowrap z-10">
+                   {{ item.name }}
+                 </div>
+               </div>
+             </div>
+             <div v-else class="flex items-center justify-center w-full h-full text-on-surface-variant font-body-sm">
                 No storage data available
              </div>
           </div>
@@ -144,5 +156,39 @@
 </template>
 
 <script setup lang="ts">
-import { connections, wsConnected, wsLogs } from '@/store/app'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { connections, selectedConnectionId, wsConnected, wsLogs } from '@/store/app'
+
+const metrics = ref<Record<string, any>>({})
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
+async function loadMetrics() {
+  if (!selectedConnectionId.value) return
+  try {
+    const resp = await fetch(`http://localhost:8080/api/connections/${selectedConnectionId.value}/metrics`)
+    metrics.value = await resp.json()
+  } catch {}
+}
+
+watch(selectedConnectionId, () => {
+  metrics.value = {}
+  if (selectedConnectionId.value) loadMetrics()
+})
+
+onMounted(() => {
+  if (selectedConnectionId.value) loadMetrics()
+  pollTimer = setInterval(loadMetrics, 10000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+})
+
+function formatBytes(bytes: number | null): string {
+  if (bytes == null) return '—'
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i]
+}
 </script>
