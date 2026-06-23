@@ -29,7 +29,7 @@
               <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-spin': loading }">refresh</span>
               <span>{{ loading ? 'Loading...' : 'Refresh' }}</span>
            </button>
-           <button class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface">
+           <button @click="exportCSV" :disabled="!previewData.length" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface disabled:opacity-50">
               <span class="material-symbols-outlined text-[18px]">download</span>
               Export
            </button>
@@ -347,5 +347,32 @@ async function refresh() {
       loading.value = false
     }
   }
+}
+
+function exportCSV() {
+  if (!previewData.value.length || !selectedTable.value) return
+  const rows = previewData.value
+  const cols = previewColumns.value
+  if (!cols.length) return
+
+  const csv = [
+    cols.map(escapeCsv).join(','),
+    ...rows.map(r => cols.map(c => escapeCsv(String(r[c] ?? ''))).join(',')),
+  ].join('\n')
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function escapeCsv(val: string): string {
+  if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+    return `"${val.replace(/"/g, '""')}"`
+  }
+  return val
 }
 </script>
