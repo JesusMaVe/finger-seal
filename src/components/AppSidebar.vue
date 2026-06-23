@@ -37,16 +37,19 @@
 
       <!-- Connection tables tree -->
       <div v-if="selectedConnectionId" class="mt-1">
-        <a href="#" @click.prevent="activeView = 'tables'"
-          class="flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-all"
+        <button @click="tablesExpanded = !tablesExpanded"
+          class="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-all"
           :class="activeView === 'tables' ? 'bg-secondary-container text-on-secondary-container font-semibold' : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface'">
           <span class="material-symbols-outlined text-[18px]" :style="{ 'font-variation-settings': activeView === 'tables' ? '\'FILL\' 1' : '' }">table_chart</span>
           Tables
-          <span class="ml-auto text-[10px] text-outline font-code-sm">{{ tables.length }}</span>
-        </a>
+          <span class="ml-auto flex items-center gap-1.5">
+            <span class="text-[10px] text-outline font-code-sm">{{ tables.length }}</span>
+            <span class="material-symbols-outlined text-[16px] transition-transform duration-200" :class="tablesExpanded ? 'rotate-90' : ''">chevron_right</span>
+          </span>
+        </button>
 
-        <!-- Table list with indent -->
-        <div v-if="activeView === 'tables' || tables.length > 0" class="ml-5 border-l border-outline-variant/30 pl-2 mt-0.5 space-y-0.5">
+        <!-- Table list with collapse -->
+        <div v-if="tablesExpanded" class="ml-5 border-l border-outline-variant/30 pl-2 mt-0.5 space-y-0.5 overflow-hidden transition-all">
           <button v-for="t in tables" :key="t.table_name" @click="goToTable(t.table_name)"
             class="w-full text-left px-2 py-1 text-xs rounded transition-all truncate flex items-center gap-1.5"
             :class="[
@@ -97,6 +100,7 @@ import { activeView, selectedConnectionId, selectedTable, connections, loadConne
 import { schemasApi, type TableInfo } from '@/api/schemas'
 
 const tables = ref<TableInfo[]>([])
+const tablesExpanded = ref(true)
 
 const currentConn = computed(() =>
   connections.value.find(c => c.id === selectedConnectionId.value)
