@@ -1,4 +1,4 @@
-# AGENTS.md — DataForge Pro
+# AGENTS.md — Finger Seal
 
 ## What this is
 

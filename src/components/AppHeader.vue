@@ -1,7 +1,7 @@
 <template>
   <header class="bg-surface-container flex justify-between items-center px-md w-full h-12 border-b border-outline-variant z-40 shrink-0">
     <div class="flex items-center gap-md h-full">
-      <span class="font-headline-md text-headline-md font-bold text-primary">DataForge Pro</span>
+      <span class="font-headline-md text-headline-md font-bold text-primary">Finger Seal</span>
       <nav class="hidden md:flex gap-md h-full ml-lg items-center">
         <a 
           href="#" 
