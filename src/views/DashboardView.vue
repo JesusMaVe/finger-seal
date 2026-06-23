@@ -181,17 +181,27 @@ import { connections, selectedConnectionId, wsConnected, wsLogs } from '@/store/
 import { schemasApi } from '@/api/schemas'
 
 const metrics = ref<Record<string, any>>({})
+const historicalCounts = ref<Record<string, number>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 async function loadMetrics() {
   if (!selectedConnectionId.value) return
   try {
-    metrics.value = await schemasApi.dashboardMetrics(selectedConnectionId.value)
+    const data = await schemasApi.dashboardMetrics(selectedConnectionId.value)
+    metrics.value = data
+    const hc: Record<string, number> = {}
+    if (data.queryIntensity) {
+      for (const item of data.queryIntensity) {
+        hc[item.day] = item.count
+      }
+    }
+    historicalCounts.value = hc
   } catch {}
 }
 
 watch(selectedConnectionId, () => {
   metrics.value = {}
+  historicalCounts.value = {}
   if (selectedConnectionId.value) loadMetrics()
 })
 
@@ -218,16 +228,16 @@ const queryMaxCount = computed(() => {
   return Math.max(...items.map((i: any) => i.count), 1)
 })
 
-// Real-time heatmap from wsLogs, organized as 4 weeks × 7 days (Mon-Sun)
+// Heatmap: combines persisted history (from backend) + real-time wsLogs
 const heatmapWeeks = computed(() => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  // Count queries per day from wsLogs (local tz)
-  const counts: Record<string, number> = {}
+  // Count queries per day from wsLogs (session real-time)
+  const sessionCounts: Record<string, number> = {}
   for (const log of wsLogs.value) {
     const d = new Date(log.timestamp)
     const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
-    counts[key] = (counts[key] || 0) + 1
+    sessionCounts[key] = (sessionCounts[key] || 0) + 1
   }
   // Find the Monday of the week containing (today - 27 days) ago
   const weekStart = new Date(today)
@@ -242,7 +252,7 @@ const heatmapWeeks = computed(() => {
       const date = new Date(weekStart)
       date.setDate(weekStart.getDate() + w * 7 + d)
       const key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
-      week.push({ day: key, count: counts[key] || 0, isFuture: date > today })
+      week.push({ day: key, count: Math.max(historicalCounts.value[key] || 0, sessionCounts[key] || 0), isFuture: date > today })
     }
     weeks.push(week)
   }
