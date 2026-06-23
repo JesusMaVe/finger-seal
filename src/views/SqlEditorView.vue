@@ -30,6 +30,10 @@
           <span class="material-symbols-outlined text-[18px]">save</span>
           Save
         </button>
+        <button @click="showHistory = !showHistory" class="flex items-center gap-xs px-md py-xs text-on-surface-variant hover:text-on-surface transition-all rounded-sm">
+          <span class="material-symbols-outlined text-[18px]">history</span>
+          <span class="text-body-sm font-body-sm">History</span>
+        </button>
       </div>
     </div>
 
@@ -91,6 +95,29 @@
       </div>
     </div>
     
+    <!-- History Panel -->
+    <div v-if="showHistory" class="border-t border-outline-variant bg-surface-container-low shrink-0 max-h-48 overflow-y-auto custom-scrollbar">
+      <div class="px-md py-1 border-b border-outline-variant flex justify-between items-center sticky top-0 bg-surface-container-low z-10">
+        <span class="font-label-caps text-label-caps text-on-surface-variant uppercase text-[11px]">Query History</span>
+        <button @click="clearHistory" class="text-code-sm text-primary hover:underline font-medium">Clear</button>
+      </div>
+      <div class="divide-y divide-outline-variant/20">
+        <div v-for="entry in history" :key="entry.id" @click="loadHistorySql(entry.sql)" class="px-md py-1 hover:bg-surface-variant transition-colors cursor-pointer flex items-center justify-between">
+          <div class="flex-1 min-w-0 mr-sm">
+            <code class="font-code-sm text-code-sm text-on-surface truncate block">{{ entry.sql }}</code>
+            <div class="flex gap-sm mt-0.5">
+              <span class="text-code-xs font-medium" :class="entry.status === 'SUCCESS' ? 'text-primary' : 'text-error'">{{ entry.status }}</span>
+              <span class="text-code-xs text-outline-variant">{{ entry.elapsedMs }}ms</span>
+              <span v-if="entry.rowsCount != null" class="text-code-xs text-outline-variant">{{ entry.rowsCount }} rows</span>
+              <span class="text-code-xs text-outline-variant">{{ new Date(entry.createdAt).toLocaleTimeString() }}</span>
+            </div>
+          </div>
+          <span v-if="entry.errorMsg" class="text-code-xs text-error truncate max-w-[150px]" :title="entry.errorMsg">{{ entry.errorMsg }}</span>
+        </div>
+        <div v-if="history.length === 0" class="px-md py-2 text-center text-outline text-body-sm italic">No queries executed yet</div>
+      </div>
+    </div>
+
     <!-- Footer local to view -->
     <footer class="h-8 bg-surface-container border-t border-outline-variant flex justify-between items-center px-md py-xs z-50 shrink-0">
       <div class="flex items-center gap-md">
@@ -108,8 +135,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { queryApi, type QueryResult } from '@/api/query'
+import { ref, onMounted, watch } from 'vue'
+import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
 
 const connections = ref<ConnectionConfig[]>([])
@@ -122,10 +149,19 @@ FROM users u
 LIMIT 100;`)
 const results = ref<QueryResult | null>(null)
 const running = ref(false)
+const showHistory = ref(false)
+const history = ref<QueryHistoryEntry[]>([])
 
 onMounted(() => {
   connectionsApi.list().then(data => connections.value = data).catch(() => {})
 })
+
+watch(selectedConnectionId, async (id) => {
+  if (!id) return
+  try {
+    history.value = await queryApi.history(id)
+  } catch { history.value = [] }
+}, { immediate: true })
 
 async function runQuery() {
   if (!selectedConnectionId.value || !sql.value.trim()) return
@@ -138,5 +174,15 @@ async function runQuery() {
   } finally {
     running.value = false
   }
+}
+
+async function clearHistory() {
+  if (!selectedConnectionId.value) return
+  await queryApi.clearHistory(selectedConnectionId.value)
+  history.value = []
+}
+
+function loadHistorySql(entrySql: string) {
+  sql.value = entrySql
 }
 </script>
