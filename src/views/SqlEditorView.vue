@@ -107,6 +107,12 @@
       </div>
     </footer>
   </div>
+  
+  <!-- Toast -->
+  <div v-if="toastMsg" class="fixed bottom-6 right-6 bg-on-surface text-surface px-4 py-2.5 rounded-lg shadow-xl text-body-sm font-medium flex items-center gap-2 z-50 animate-toast">
+    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+    {{ toastMsg }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -125,6 +131,7 @@ const results = ref<QueryResult | null>(null)
 const running = ref(false)
 const showHistory = ref(false)
 const history = ref<QueryHistoryEntry[]>([])
+const toastMsg = ref('')
 
 onMounted(loadConnections)
 
@@ -163,6 +170,8 @@ function saveSql() {
   a.download = 'query.sql'
   a.click()
   URL.revokeObjectURL(url)
+  toastMsg.value = 'query.sql downloaded'
+  setTimeout(() => { toastMsg.value = '' }, 3000)
 }
 
 function exportCsv() {
@@ -182,6 +191,8 @@ function exportCsv() {
   a.download = 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv'
   a.click()
   URL.revokeObjectURL(url)
+  toastMsg.value = 'CSV downloaded'
+  setTimeout(() => { toastMsg.value = '' }, 3000)
 }
 
 async function clearHistory() {
