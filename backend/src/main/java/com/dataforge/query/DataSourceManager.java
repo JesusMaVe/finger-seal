@@ -20,14 +20,23 @@ public class DataSourceManager {
 
     public HikariDataSource createDataSource(ConnectionConfig config) {
         HikariConfig hikari = new HikariConfig();
-        hikari.setJdbcUrl(buildJdbcUrl(config));
+        String url = buildJdbcUrl(config);
+        hikari.setJdbcUrl(url);
         hikari.setUsername(config.getUsername());
         hikari.setPassword(config.getPassword());
         hikari.setMaximumPoolSize(5);
         hikari.setMinimumIdle(1);
         hikari.setIdleTimeout(300_000);
         hikari.setConnectionTimeout(5_000);
-        hikari.setDriverClassName(driverClass(config.getDbType()));
+        // ponytail: auto-detect driver from raw JDBC URL
+        if (url.startsWith("jdbc:")) {
+            String driver = url.substring(5);
+            int colon = driver.indexOf(':');
+            String vendor = colon > 0 ? driver.substring(0, colon) : driver;
+            hikari.setDriverClassName(driverClass(vendor.toUpperCase()));
+        } else {
+            hikari.setDriverClassName(driverClass(config.getDbType()));
+        }
         return new HikariDataSource(hikari);
     }
 
@@ -39,6 +48,10 @@ public class DataSourceManager {
     }
 
     private String buildJdbcUrl(ConnectionConfig c) {
+        // ponytail: accept raw JDBC URL in database field (e.g. for tests)
+        if (c.getDatabase() != null && c.getDatabase().startsWith("jdbc:")) {
+            return c.getDatabase();
+        }
         return switch (c.getDbType()) {
             case "POSTGRESQL" -> "jdbc:postgresql://" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
             case "MYSQL" -> "jdbc:mysql://" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
@@ -52,6 +65,7 @@ public class DataSourceManager {
             case "POSTGRESQL" -> "org.postgresql.Driver";
             case "MYSQL" -> "com.mysql.cj.jdbc.Driver";
             case "SQLITE" -> "org.sqlite.JDBC";
+            case "H2" -> "org.h2.Driver";
             default -> throw new IllegalArgumentException("Unsupported DB type: " + dbType);
         };
     }
