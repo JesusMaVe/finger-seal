@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface QueryHistoryRepository extends CrudRepository<QueryHistory, Long> {
     List<QueryHistory> findByConnectionIdOrderByCreatedAtDesc(Long connectionId);
-    void deleteByConnectionId(Long connectionId);
+
+    default void deleteByConnectionId(Long connectionId) {
+        deleteAll(findByConnectionIdOrderByCreatedAtDesc(connectionId));
+    }
 }
