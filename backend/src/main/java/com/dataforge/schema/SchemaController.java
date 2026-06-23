@@ -61,4 +61,70 @@ public class SchemaController {
             return tables;
         });
     }
+
+    @GetMapping("/tables/{tableName}/columns")
+    public List<Map<String, Object>> tableColumns(@PathVariable Long id, @PathVariable String tableName) throws SQLException {
+        ConnectionConfig config = connectionRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
+        DataSource ds = dataSourceManager.getOrCreate(config);
+        List<Map<String, Object>> cols = new ArrayList<>();
+        try (Connection conn = ds.getConnection()) {
+            var meta = conn.getMetaData();
+            String schema = config.getDbType().equals("POSTGRESQL") ? "public" : null;
+            try (var rs = meta.getColumns(null, schema, tableName, null)) {
+                while (rs.next()) {
+                    Map<String, Object> col = new LinkedHashMap<>();
+                    col.put("name", rs.getString("COLUMN_NAME"));
+                    col.put("type", rs.getString("TYPE_NAME"));
+                    col.put("nullable", rs.getString("IS_NULLABLE"));
+                    col.put("default", rs.getString("COLUMN_DEF"));
+                    col.put("size", rs.getInt("COLUMN_SIZE"));
+                    cols.add(col);
+                }
+            }
+        }
+        return cols;
+    }
+
+    @GetMapping("/tables/{tableName}/data")
+    public List<Map<String, Object>> tableData(@PathVariable Long id, @PathVariable String tableName,
+            @RequestParam(defaultValue = "100") int limit) {
+        ConnectionConfig config = connectionRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
+        DataSource ds = dataSourceManager.getOrCreate(config);
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        // ponytail: naive LIMIT works for PG, MySQL, SQLite
+        String sql = "SELECT * FROM " + tableName + " LIMIT " + limit;
+        return jdbc.query(sql, (ResultSet rs) -> {
+            ResultSetMetaData meta = rs.getMetaData();
+            int colCount = meta.getColumnCount();
+            List<Map<String, Object>> rows = new ArrayList<>();
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                for (int i = 1; i <= colCount; i++) {
+                    row.put(meta.getColumnLabel(i), rs.getObject(i));
+                }
+                rows.add(row);
+            }
+            return rows;
+        });
+    }
+
+    @GetMapping("/tables/{tableName}/stats")
+    public Map<String, Object> tableStats(@PathVariable Long id, @PathVariable String tableName) {
+        ConnectionConfig config = connectionRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
+        DataSource ds = dataSourceManager.getOrCreate(config);
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        String sql = switch (config.getDbType()) {
+            case "POSTGRESQL" -> "SELECT reltuples::bigint AS row_count, pg_size_pretty(pg_total_relation_size(?)) AS total_size, pg_size_pretty(pg_indexes_size(?)) AS index_size FROM pg_class WHERE relname = ?";
+            case "MYSQL" -> "SELECT TABLE_ROWS AS row_count, ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS total_size_mb, ROUND(INDEX_LENGTH / 1024 / 1024, 1) AS index_size_mb FROM information_schema.tables WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()";
+            case "SQLITE" -> "SELECT COUNT(*) AS row_count, 'N/A' AS total_size FROM " + tableName;
+            default -> throw new IllegalArgumentException("Unsupported DB type");
+        };
+        if (config.getDbType().equals("POSTGRESQL")) {
+            return jdbc.queryForMap(sql, tableName, tableName, tableName);
+        }
+        return jdbc.queryForMap(sql, tableName);
+    }
 }
