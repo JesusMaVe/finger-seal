@@ -1,4 +1,4 @@
-# DataForge Pro
+# Finger seal
 
 Database management UI — SQL editor, connection manager, table explorer, and dashboard.
 
