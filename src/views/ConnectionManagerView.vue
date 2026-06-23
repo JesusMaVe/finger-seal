@@ -106,9 +106,9 @@
             <div class="col-span-2 md:col-span-1">
               <label class="block text-label-caps text-on-surface-variant mb-xs">PASSWORD</label>
               <div class="relative">
-                <input class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 pr-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" type="password" v-model="form.password"/>
+                <input :type="showPassword ? 'text' : 'password'" class="w-full bg-surface border border-outline-variant rounded px-md py-sm pl-10 pr-10 focus:border-primary focus:ring-1 focus:ring-primary text-on-surface transition-all outline-none font-code-md" v-model="form.password"/>
                 <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]">lock</span>
-                <button class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors text-[18px] cursor-pointer" @click="showPassword = !showPassword" :type="showPassword ? 'text' : 'password'">visibility</button>
+                <button class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors text-[18px] cursor-pointer" @click="showPassword = !showPassword">{{ showPassword ? 'visibility_off' : 'visibility' }}</button>
               </div>
             </div>
           </div>
