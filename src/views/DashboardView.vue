@@ -117,12 +117,23 @@
               </tr>
             </thead>
             <tbody class="font-body-sm">
+              <tr v-if="connected" class="border-b border-outline-variant/30 bg-surface/50">
+                <td colspan="5" class="px-md py-2 text-center">
+                  <span class="inline-flex items-center gap-2 text-code-sm text-primary">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    Connected — watching for queries
+                  </span>
+                </td>
+              </tr>
               <tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/40 transition-colors cursor-pointer group" v-for="(log, i) in logs" :key="i">
-                <td class="px-md py-2 font-code-sm text-code-sm text-outline group-hover:text-on-surface-variant transition-colors">{{log.time}}</td>
-                <td class="px-md py-2 font-body-sm text-on-surface">{{log.user}}</td>
-                <td class="px-md py-2 font-code-sm text-code-sm text-primary/80 group-hover:text-primary transition-colors truncate max-w-[200px]">{{log.stmt}}</td>
-                <td class="px-md py-2 font-code-sm text-code-sm text-right text-on-surface-variant">{{log.exec}}</td>
-                <td class="px-md py-2 font-code-sm text-code-sm text-right font-bold text-on-surface">{{log.rows}}</td>
+                <td class="px-md py-2 font-code-sm text-code-sm text-outline group-hover:text-on-surface-variant transition-colors">{{ new Date(log.timestamp).toLocaleTimeString() }}</td>
+                <td class="px-md py-2 font-body-sm text-on-surface">conn-{{ log.connectionId }}</td>
+                <td class="px-md py-2 font-code-sm text-code-sm text-primary/80 group-hover:text-primary transition-colors truncate max-w-[200px]">{{ log.sql }}</td>
+                <td class="px-md py-2 font-code-sm text-code-sm text-right text-on-surface-variant">{{ log.elapsedMs }}ms</td>
+                <td class="px-md py-2 font-code-sm text-code-sm text-right font-bold" :class="log.status === 'ERROR' ? 'text-error' : 'text-on-surface'">{{ log.rows ?? '-' }}</td>
+              </tr>
+              <tr v-if="!logs.length && !connected">
+                <td colspan="5" class="px-md py-4 text-center text-on-surface-variant font-body-sm italic">Not connected — start the backend</td>
               </tr>
             </tbody>
           </table>
@@ -133,12 +144,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { connections } from '@/store/app'
+import { useWebSocket, type QueryEvent } from '@/composables/useWebSocket'
 
-const connections = ref<ConnectionConfig[]>([])
+const logs = ref<QueryEvent[]>([])
 
-onMounted(() => {
-  connectionsApi.list().then(data => connections.value = data).catch(() => {})
+const port = window.location.port || '8080'
+const { connected, lastEvent } = useWebSocket(`ws://${window.location.hostname}:${port}/ws/events`)
+
+watch(lastEvent, (ev) => {
+  if (ev && ev.type === 'query') {
+    logs.value.unshift(ev)
+    if (logs.value.length > 50) logs.value.pop()
+  }
 })
 </script>
