@@ -24,9 +24,8 @@
             <span class="material-symbols-outlined text-primary text-[20px]">memory</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-on-surface">12.4%</div>
+            <div class="font-headline-lg text-[28px] text-on-surface">—</div>
             <div class="w-full bg-surface-variant h-1 rounded-full mt-2 overflow-hidden flex">
-              <div class="bg-primary h-full transition-all duration-1000" style="width: 12.4%"></div>
             </div>
           </div>
         </div>
@@ -37,9 +36,8 @@
             <span class="material-symbols-outlined text-primary text-[20px]">memory_alt</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-on-surface">4.2 <span class="text-body-sm text-on-surface-variant">GB / 16GB</span></div>
+            <div class="font-headline-lg text-[28px] text-on-surface">— <span class="text-body-sm text-on-surface-variant">/ —</span></div>
             <div class="w-full bg-surface-variant h-1 rounded-full mt-2 overflow-hidden">
-              <div class="bg-outline h-full transition-all duration-1000" style="width: 26%"></div>
             </div>
           </div>
         </div>
@@ -50,8 +48,8 @@
             <span class="material-symbols-outlined text-primary text-[20px]">hub</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-primary">142</div>
-            <div class="font-code-sm text-code-sm text-outline">+12 in last 5m</div>
+            <div class="font-headline-lg text-[28px] text-primary">{{ connections.length }}</div>
+            <div class="font-code-sm text-code-sm text-outline">saved connections</div>
           </div>
         </div>
         <!-- Storage -->
@@ -62,8 +60,8 @@
             <span class="material-symbols-outlined text-primary text-[20px]">storage</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-primary">840</div>
-            <div class="font-body-sm text-body-sm text-on-surface-variant italic">Peak load detected</div>
+            <div class="font-headline-lg text-[28px] text-primary">—</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant italic">Connect to a database</div>
           </div>
         </div>
 
@@ -135,5 +133,12 @@
 </template>
 
 <script setup lang="ts">
-const logs: { time: string; user: string; stmt: string; exec: string; rows: string }[] = []
+import { ref, onMounted } from 'vue'
+import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+
+const connections = ref<ConnectionConfig[]>([])
+
+onMounted(() => {
+  connectionsApi.list().then(data => connections.value = data).catch(() => {})
+})
 </script>
