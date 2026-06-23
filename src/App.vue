@@ -3,7 +3,7 @@
     <AppHeader />
     <div class="flex flex-1 overflow-hidden min-h-0">
       <AppSidebar />
-      <main class="flex-1 flex flex-col bg-surface-container-lowest min-w-0 overflow-y-auto custom-scrollbar">
+      <main class="flex-1 flex flex-col bg-surface-container-lowest min-w-0 overflow-y-auto custom-scrollbar fade-in">
         <!-- Dynamic component based on state -->
         <component :is="currentViewComponent" />
       </main>

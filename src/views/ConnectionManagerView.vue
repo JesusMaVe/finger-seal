@@ -10,7 +10,7 @@
       </div>
 
       <!-- Main Form Card -->
-      <section class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg shadow-black/5 overflow-hidden flex flex-col md:flex-row">
+      <section class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg shadow-black/5 overflow-hidden flex flex-col md:flex-row hover-lift">
 
         <!-- Left Sidebar Type List -->
         <div class="w-full md:w-1/3 bg-surface-container-low border-r border-outline-variant p-lg flex flex-col gap-md shrink-0">
