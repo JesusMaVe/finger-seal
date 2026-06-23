@@ -17,10 +17,12 @@ public class QueryService {
 
     private final ConnectionRepository connectionRepo;
     private final DataSourceManager dataSourceManager;
+    private final QueryHistoryRepository historyRepo;
 
-    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager) {
+    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
+        this.historyRepo = historyRepo;
     }
 
     public QueryResult execute(QueryRequest request) {
@@ -33,14 +35,27 @@ public class QueryService {
 
         try {
             String sql = request.getSql().trim().toUpperCase();
+            QueryResult result;
             if (sql.startsWith("SELECT") || sql.startsWith("WITH") || sql.startsWith("EXPLAIN") || sql.startsWith("DESCRIBE") || sql.startsWith("SHOW")) {
-                return executeQuery(jdbc, request.getSql(), start);
+                result = executeQuery(jdbc, request.getSql(), start);
             } else {
-                return executeUpdate(jdbc, request.getSql(), start);
+                result = executeUpdate(jdbc, request.getSql(), start);
             }
+            historyRepo.save(new QueryHistory(
+                request.getConnectionId(), request.getSql(), "SUCCESS",
+                result.getElapsedMs(),
+                result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
+                null
+            ));
+            return result;
         } catch (Exception e) {
             long elapsed = System.currentTimeMillis() - start;
-            return new QueryResult(e.getMessage(), elapsed);
+            QueryResult result = new QueryResult(e.getMessage(), elapsed);
+            historyRepo.save(new QueryHistory(
+                request.getConnectionId(), request.getSql(), "ERROR",
+                elapsed, null, e.getMessage()
+            ));
+            return result;
         }
     }
 
