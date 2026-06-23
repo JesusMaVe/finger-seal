@@ -52,6 +52,17 @@
                 <p class="text-body-sm text-on-surface-variant">Embedded</p>
               </div>
             </button>
+            <button @click="selectDbType('ORACLE')"
+              class="w-full text-left flex items-start gap-md p-md rounded-lg transition-all group"
+              :class="form.dbType === 'ORACLE' ? 'border-2 border-primary bg-primary-container/[0.05]' : 'border border-outline-variant bg-surface hover:border-outline'">
+               <div class="w-10 h-10 shrink-0 rounded bg-surface-variant flex items-center justify-center p-2 mt-0.5 border border-transparent group-hover:border-outline-variant">
+                <span class="material-symbols-outlined text-outline text-[22px]">database</span>
+              </div>
+              <div>
+                <p class="font-bold text-on-surface">Oracle DB</p>
+                <p class="text-body-sm text-on-surface-variant">Enterprise</p>
+              </div>
+            </button>
           </div>
 
           <div class="mt-xl p-md rounded-lg border border-outline-variant bg-surface-container flex flex-col gap-xs mt-auto">
@@ -234,6 +245,7 @@ function selectDbType(type: ConnectionConfig['dbType']) {
   form.value.dbType = type
   if (type === 'POSTGRESQL') form.value.port = 5432
   else if (type === 'MYSQL') form.value.port = 3306
+  else if (type === 'ORACLE') form.value.port = 1521
   else form.value.port = 0
 }
 

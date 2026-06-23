@@ -9,7 +9,7 @@ public class ConnectionConfig {
     @Id
     private Long id;
     private String name;
-    private String dbType;    // POSTGRESQL, MYSQL, SQLITE
+    private String dbType;    // POSTGRESQL, MYSQL, SQLITE, ORACLE
     private String host;
     private int port;
     private String database;

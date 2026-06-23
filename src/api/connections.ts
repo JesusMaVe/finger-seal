@@ -3,7 +3,7 @@ import { apiFetch } from './client';
 export interface ConnectionConfig {
   id?: number;
   name: string;
-  dbType: 'POSTGRESQL' | 'MYSQL' | 'SQLITE';
+  dbType: 'POSTGRESQL' | 'MYSQL' | 'SQLITE' | 'ORACLE';
   host: string;
   port: number;
   database: string;

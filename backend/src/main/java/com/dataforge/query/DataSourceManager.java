@@ -56,6 +56,7 @@ public class DataSourceManager {
             case "POSTGRESQL" -> "jdbc:postgresql://" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
             case "MYSQL" -> "jdbc:mysql://" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
             case "SQLITE" -> "jdbc:sqlite:" + c.getDatabase();
+            case "ORACLE" -> "jdbc:oracle:thin:@/" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
             default -> throw new IllegalArgumentException("Unsupported DB type: " + c.getDbType());
         };
     }
@@ -65,6 +66,7 @@ public class DataSourceManager {
             case "POSTGRESQL" -> "org.postgresql.Driver";
             case "MYSQL" -> "com.mysql.cj.jdbc.Driver";
             case "SQLITE" -> "org.sqlite.JDBC";
+            case "ORACLE" -> "oracle.jdbc.OracleDriver";
             case "H2" -> "org.h2.Driver";
             default -> throw new IllegalArgumentException("Unsupported DB type: " + dbType);
         };
