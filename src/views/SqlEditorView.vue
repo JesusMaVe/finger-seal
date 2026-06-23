@@ -128,12 +128,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
-import { connectionsApi, type ConnectionConfig } from '@/api/connections'
-import { selectedConnectionId } from '@/store/app'
+import { connections, loadConnections, selectedConnectionId } from '@/store/app'
 
-const connections = ref<ConnectionConfig[]>([])
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 const sql = ref(`SELECT
   u.id,
@@ -146,9 +144,7 @@ const running = ref(false)
 const showHistory = ref(false)
 const history = ref<QueryHistoryEntry[]>([])
 
-onMounted(() => {
-  connectionsApi.list().then(data => connections.value = data).catch(() => {})
-})
+onMounted(loadConnections)
 
 watch(selectedConnectionId, async (id) => {
   if (!id) return

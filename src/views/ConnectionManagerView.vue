@@ -164,6 +164,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { connections, loadConnections } from '@/store/app'
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
 
 const form = ref<ConnectionConfig>({
@@ -176,16 +177,13 @@ const form = ref<ConnectionConfig>({
   password: '',
 })
 
-const connections = ref<ConnectionConfig[]>([])
 const testing = ref(false)
 const saving = ref(false)
 const error = ref('')
 const success = ref('')
 const showPassword = ref(false)
 
-onMounted(() => {
-  connectionsApi.list().then(data => connections.value = data).catch(() => {})
-})
+onMounted(loadConnections)
 
 async function testConnection() {
   testing.value = true
@@ -206,8 +204,8 @@ async function saveConnection() {
   error.value = ''
   success.value = ''
   try {
-    const saved = await connectionsApi.create(form.value)
-    connections.value.push(saved)
+    await connectionsApi.create(form.value)
+    await loadConnections()
     success.value = 'Connection saved!'
   } catch (e: any) {
     error.value = e.message || 'Failed to save'
@@ -224,9 +222,10 @@ function selectDbType(type: ConnectionConfig['dbType']) {
   else form.value.port = 0
 }
 
-function deleteConnection(id: number) {
-  connectionsApi.delete(id).then(() => {
-    connections.value = connections.value.filter(c => c.id !== id)
-  }).catch(() => {})
+async function deleteConnection(id: number) {
+  try {
+    await connectionsApi.delete(id)
+    await loadConnections()
+  } catch {}
 }
 </script>

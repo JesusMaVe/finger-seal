@@ -197,10 +197,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { schemasApi, type ColumnInfo } from '@/api/schemas'
-import { connectionsApi, type ConnectionConfig } from '@/api/connections'
-import { selectedConnectionId, selectedTable } from '@/store/app'
+import { connections, loadConnections, selectedConnectionId, selectedTable } from '@/store/app'
 
-const connections = ref<ConnectionConfig[]>([])
 const columns = ref<ColumnInfo[]>([])
 const previewData = ref<Record<string, unknown>[]>([])
 const tableStats = ref<Record<string, unknown>>({})
@@ -212,9 +210,7 @@ const previewColumns = computed(() =>
   previewData.value.length > 0 ? Object.keys(previewData.value[0]) : []
 )
 
-onMounted(() => {
-  connectionsApi.list().then(data => connections.value = data).catch(() => {})
-})
+onMounted(loadConnections)
 
 watch(selectedConnectionId, () => {
   columns.value = []

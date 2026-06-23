@@ -95,25 +95,17 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { activeView, selectedConnectionId, selectedTable } from '@/store/app'
-import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { activeView, selectedConnectionId, selectedTable, connections, loadConnections } from '@/store/app'
 import { schemasApi, type TableInfo } from '@/api/schemas'
 
-const connections = ref<ConnectionConfig[]>([])
 const tables = ref<TableInfo[]>([])
 
 const currentConn = computed(() =>
   connections.value.find(c => c.id === selectedConnectionId.value)
 )
 
-onMounted(() => {
-  connectionsApi.list().then(data => {
-    connections.value = data
-    if (data.length > 0 && !selectedConnectionId.value) {
-      selectedConnectionId.value = data[0].id!
-    }
-  }).catch(() => {})
-})
+onMounted(loadConnections)
+watch(activeView, () => { if (activeView.value === 'tables') loadConnections() })
 
 watch(selectedConnectionId, (id) => {
   tables.value = []
