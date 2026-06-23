@@ -162,19 +162,31 @@ async function runQuery() {
   }
 }
 
-function saveSql() {
-  const blob = new Blob([sql.value], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'query.sql'
-  a.click()
-  URL.revokeObjectURL(url)
-  toastMsg.value = 'query.sql downloaded'
+async function saveSql() {
+  const content = sql.value
+  if ('showSaveFilePicker' in window) {
+    const handle = await (window as any).showSaveFilePicker({
+      suggestedName: 'query.sql',
+      types: [{ description: 'SQL File', accept: { 'text/plain': ['.sql'] } }]
+    })
+    const writable = await handle.createWritable()
+    await writable.write(content)
+    await writable.close()
+  } else {
+    // fallback: direct download
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'query.sql'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+  toastMsg.value = 'query.sql saved'
   setTimeout(() => { toastMsg.value = '' }, 3000)
 }
 
-function exportCsv() {
+async function exportCsv() {
   if (!results.value?.columns || !results.value?.rows) return
   const cols = results.value.columns
   const rows = results.value.rows.map((r: any) => cols.map(c => {
@@ -184,13 +196,23 @@ function exportCsv() {
     return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s
   }).join(','))
   const csv = [cols.join(','), ...rows].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+  if ('showSaveFilePicker' in window) {
+    const handle = await (window as any).showSaveFilePicker({
+      suggestedName: 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv',
+      types: [{ description: 'CSV File', accept: { 'text/csv': ['.csv'] } }]
+    })
+    const writable = await handle.createWritable()
+    await writable.write(csv)
+    await writable.close()
+  } else {
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   toastMsg.value = 'CSV downloaded'
   setTimeout(() => { toastMsg.value = '' }, 3000)
 }
