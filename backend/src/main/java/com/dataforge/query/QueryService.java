@@ -37,12 +37,15 @@ public class QueryService {
         JdbcTemplate jdbc = new JdbcTemplate(ds);
 
         try {
-            String sql = request.getSql().trim().toUpperCase();
+            String rawSql = request.getSql().trim();
+            // ponytail: strip trailing semicolons (JDBC doesn't accept them)
+            while (rawSql.endsWith(";")) rawSql = rawSql.substring(0, rawSql.length() - 1).trim();
+            String sql = rawSql.toUpperCase();
             QueryResult result;
             if (sql.startsWith("SELECT") || sql.startsWith("WITH") || sql.startsWith("EXPLAIN") || sql.startsWith("DESCRIBE") || sql.startsWith("SHOW")) {
-                result = executeQuery(jdbc, request.getSql(), start);
+                result = executeQuery(jdbc, rawSql, start);
             } else {
-                result = executeUpdate(jdbc, request.getSql(), start);
+                result = executeUpdate(jdbc, rawSql, start);
             }
             historyRepo.save(new QueryHistory(
                 request.getConnectionId(), request.getSql(), "SUCCESS",
