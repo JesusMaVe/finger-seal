@@ -4,13 +4,13 @@
       <!-- Dashboard Header -->
       <div class="flex justify-between items-end mb-sm">
         <div>
-          <h1 class="font-headline-lg text-headline-lg text-on-surface">Cluster Performance</h1>
-          <p class="font-body-md text-body-md text-on-surface-variant mt-xs">Real-time telemetry from production-01-us-east</p>
+          <h1 class="font-headline-lg text-headline-lg text-on-surface">Performance Overview</h1>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-xs">{{ currentConn?.name ? currentConn.name + ' (' + currentConn.dbType + ')' : 'No connection selected' }}</p>
         </div>
         <div class="flex gap-sm">
           <div class="flex items-center gap-xs bg-surface-container-low px-sm py-xs rounded border border-outline-variant shadow-sm shadow-black/5">
-            <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-            <span class="font-code-sm text-code-sm text-primary uppercase font-bold tracking-widest">Cluster Healthy</span>
+            <span class="w-2 h-2 rounded-full" :class="wsConnected ? 'bg-primary animate-pulse' : 'bg-error'"></span>
+            <span class="font-code-sm text-code-sm uppercase font-bold tracking-widest" :class="wsConnected ? 'text-primary' : 'text-error'">{{ wsConnected ? 'Connected' : 'Disconnected' }}</span>
           </div>
         </div>
       </div>
@@ -183,6 +183,8 @@ import { schemasApi } from '@/api/schemas'
 const metrics = ref<Record<string, any>>({})
 const historicalCounts = ref<Record<string, number>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 
 async function loadMetrics() {
   if (!selectedConnectionId.value) return
