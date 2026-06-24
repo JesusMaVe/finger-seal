@@ -110,4 +110,62 @@ public class QueryService {
         long elapsed = System.currentTimeMillis() - start;
         return new QueryResult(affected, elapsed);
     }
+
+    private static final java.util.regex.Pattern SAFE_IDENTIFIER =
+        java.util.regex.Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_$]*$");
+
+    // ponytail: inline cell UPDATE. Primary key is assumed to be the first column.
+    // Upgrade to real PK detection from schema metadata if needed.
+    public QueryResult inlineEdit(InlineEditRequest request) {
+        long start = System.currentTimeMillis();
+        ConnectionConfig config = connectionRepo.findById(request.getConnectionId())
+            .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + request.getConnectionId()));
+
+        if (!SAFE_IDENTIFIER.matcher(request.getTable()).matches()) {
+            return new QueryResult("Invalid table name", System.currentTimeMillis() - start);
+        }
+        for (String pkCol : request.getPrimaryKey().keySet()) {
+            if (!SAFE_IDENTIFIER.matcher(pkCol).matches()) {
+                return new QueryResult("Invalid column name: " + pkCol, System.currentTimeMillis() - start);
+            }
+        }
+        if (!SAFE_IDENTIFIER.matcher(request.getColumn()).matches()) {
+            return new QueryResult("Invalid column name", System.currentTimeMillis() - start);
+        }
+
+        DataSource ds = dataSourceManager.getOrCreate(config);
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
+        jdbc.setQueryTimeout(10);
+
+        StringBuilder sql = new StringBuilder("UPDATE ");
+        sql.append(request.getTable()).append(" SET ").append(request.getColumn()).append(" = ?");
+        sql.append(" WHERE ");
+        var pkEntries = new ArrayList<>(request.getPrimaryKey().entrySet());
+        for (int i = 0; i < pkEntries.size(); i++) {
+            if (i > 0) sql.append(" AND ");
+            sql.append(pkEntries.get(i).getKey()).append(" = ?");
+        }
+
+        List<Object> params = new ArrayList<>();
+        params.add(request.getValue());
+        for (var entry : pkEntries) {
+            params.add(entry.getValue());
+        }
+
+        int affected = jdbc.update(sql.toString(), params.toArray());
+
+        // Record in history
+        historyRepo.save(new QueryHistory(
+            request.getConnectionId(),
+            "UPDATE " + request.getTable() + " SET " + request.getColumn() + " = ? WHERE ...",
+            "SUCCESS", System.currentTimeMillis() - start, affected, null
+        ));
+        eventPublisher.queryExecuted(
+            request.getConnectionId(),
+            "UPDATE " + request.getTable() + " SET " + request.getColumn() + " = ...",
+            "SUCCESS", System.currentTimeMillis() - start, affected, null
+        );
+
+        return new QueryResult(affected, System.currentTimeMillis() - start);
+    }
 }

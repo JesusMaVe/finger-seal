@@ -8,6 +8,14 @@ export interface QueryResult {
   error?: string;
 }
 
+export interface InlineEditRequest {
+  connectionId: number;
+  table: string;
+  primaryKey: Record<string, unknown>;
+  column: string;
+  value: unknown;
+}
+
 export interface QueryHistoryEntry {
   id: number;
   connectionId: number;
@@ -31,4 +39,10 @@ export const queryApi = {
 
   clearHistory: (connectionId: number) =>
     apiFetch<void>(`/connections/${connectionId}/history`, { method: 'DELETE' }),
+
+  inlineEdit: (req: InlineEditRequest) =>
+    apiFetch<QueryResult>('/query/inline-edit', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
 };

@@ -17,4 +17,9 @@ public class QueryController {
     public QueryResult execute(@Valid @RequestBody QueryRequest request) {
         return queryService.execute(request);
     }
+
+    @PostMapping("/inline-edit")
+    public QueryResult inlineEdit(@Valid @RequestBody InlineEditRequest request) {
+        return queryService.inlineEdit(request);
+    }
 }

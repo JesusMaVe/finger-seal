@@ -189,7 +189,21 @@
                  <tbody class="font-code-sm text-on-surface-variant divide-y divide-outline-variant/20">
                     <tr v-for="(row, idx) in previewData" :key="idx" class="hover:bg-surface-variant transition-colors group cursor-pointer">
                       <td class="px-md py-1 border-r border-outline-variant/20 text-outline group-hover:text-on-surface-variant">{{ idx + 1 }}</td>
-                      <td v-for="col in previewColumns" :key="col" class="px-md py-1 border-r border-outline-variant/20 group-hover:text-on-surface transition-colors">{{ row[col] ?? '' }}</td>
+                      <td v-for="col in previewColumns" :key="col"
+                        class="px-md py-1 border-r border-outline-variant/20 group-hover:text-on-surface transition-colors relative"
+                        @dblclick="startInlineEdit(idx, col, $event)">
+                        <template v-if="editingCell?.row === idx && editingCell?.col === col">
+                          <input ref="editInput" v-model="editValue"
+                            class="w-full bg-surface border border-primary rounded px-1 py-0.5 font-code-sm text-on-surface outline-none"
+                            @blur="saveInlineEdit(idx, col)"
+                            @keydown.enter="saveInlineEdit(idx, col)"
+                            @keydown.escape="cancelInlineEdit"
+                            autofocus />
+                        </template>
+                        <template v-else>
+                          {{ row[col] ?? '' }}
+                        </template>
+                      </td>
                     </tr>
                  </tbody>
                </table>
@@ -259,10 +273,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { schemasApi, type ColumnInfo } from '@/api/schemas'
 import { queryApi } from '@/api/query'
-import { connections, loadConnections, selectedConnectionId, selectedTable, activeView, pendingQuery } from '@/store/app'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/app'
+const appStore = useAppStore()
+const { connections, selectedConnectionId, selectedTable, activeView, pendingQuery } = storeToRefs(appStore)
+const { loadConnections } = appStore
 
 const columns = ref<ColumnInfo[]>([])
 const foreignKeys = ref<Record<string, unknown>[]>([])
@@ -406,6 +424,47 @@ function formatTimestamp(ts: string): string {
     return new Date(ts).toLocaleString()
   } catch {
     return ts
+  }
+}
+
+const editingCell = ref<{ row: number; col: string } | null>(null)
+const editValue = ref('')
+const editInput = ref<HTMLInputElement>()
+
+function startInlineEdit(rowIdx: number, col: string, event: MouseEvent) {
+  const row = previewData.value[rowIdx]
+  editingCell.value = { row: rowIdx, col }
+  editValue.value = String(row[col] ?? '')
+  nextTick(() => {
+    const input = document.activeElement as HTMLInputElement
+    if (input) input.focus()
+  })
+}
+
+function cancelInlineEdit() {
+  editingCell.value = null
+}
+
+async function saveInlineEdit(rowIdx: number, col: string) {
+  if (!selectedConnectionId.value || !selectedTable.value) return
+  const row = previewData.value[rowIdx]
+  const firstCol = previewColumns.value[0]
+  try {
+    await queryApi.inlineEdit({
+      connectionId: selectedConnectionId.value,
+      table: selectedTable.value,
+      primaryKey: { [firstCol]: row[firstCol] },
+      column: col,
+      value: editValue.value,
+    })
+    row[col] = editValue.value
+    editingCell.value = null
+    toastMsg.value = 'Cell updated'
+    setTimeout(() => { toastMsg.value = '' }, 2000)
+  } catch (e: any) {
+    toastMsg.value = 'Update failed: ' + (e.message || 'unknown error')
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+    editingCell.value = null
   }
 }
 
