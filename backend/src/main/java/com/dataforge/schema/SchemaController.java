@@ -56,7 +56,7 @@ public class SchemaController {
                 """;
             case "SQLITE" -> "SELECT name AS table_name, type AS table_type FROM sqlite_master WHERE type IN ('table','view') ORDER BY name";
             case "ORACLE" -> "SELECT USER AS \"schema_name\", table_name AS \"table_name\", 'TABLE' AS \"table_type\" FROM user_tables ORDER BY table_name";
-            default -> throw new IllegalArgumentException("Unsupported DB type");
+            default -> "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'PUBLIC' ORDER BY table_name";
         };
 
         return jdbc.query(sql, (ResultSet rs) -> {
