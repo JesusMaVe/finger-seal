@@ -1,0 +1,11 @@
+spring:
+  sql:
+    init:
+      mode: always
+
+app:
+  encryption:
+    key: VGVzdEJhc2U2NEtleUZvclRlc3RpbmdQdXJwb3Nlcw==
+
+vault:
+  enabled: false
