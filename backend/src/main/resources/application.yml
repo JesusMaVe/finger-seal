@@ -19,3 +19,12 @@ spring:
 app:
   encryption:
     key: ${APP_ENCRYPTION_KEY:CHANGEME}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    tags:
+      application: finger-seal

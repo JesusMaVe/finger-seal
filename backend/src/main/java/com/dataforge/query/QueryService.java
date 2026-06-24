@@ -3,6 +3,8 @@ package com.dataforge.query;
 import com.dataforge.connection.ConnectionConfig;
 import com.dataforge.connection.ConnectionRepository;
 import com.dataforge.ws.EventPublisher;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
@@ -20,12 +22,18 @@ public class QueryService {
     private final DataSourceManager dataSourceManager;
     private final QueryHistoryRepository historyRepo;
     private final EventPublisher eventPublisher;
+    private final MeterRegistry meterRegistry;
+    private final Timer queryTimer;
 
-    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo, EventPublisher eventPublisher) {
+    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo, EventPublisher eventPublisher, MeterRegistry meterRegistry) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
         this.historyRepo = historyRepo;
         this.eventPublisher = eventPublisher;
+        this.meterRegistry = meterRegistry;
+        this.queryTimer = Timer.builder("query.execution")
+            .description("Query execution time")
+            .register(meterRegistry);
     }
 
     public QueryResult execute(QueryRequest request) {
@@ -60,6 +68,7 @@ public class QueryService {
                 result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
                 null
             );
+            queryTimer.record(System.currentTimeMillis() - start, java.util.concurrent.TimeUnit.MILLISECONDS);
             return result;
         } catch (Exception e) {
             long elapsed = System.currentTimeMillis() - start;
@@ -75,6 +84,7 @@ public class QueryService {
                 null,
                 e.getMessage()
             );
+            queryTimer.record(System.currentTimeMillis() - start, java.util.concurrent.TimeUnit.MILLISECONDS);
             return result;
         }
     }
