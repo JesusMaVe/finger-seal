@@ -46,7 +46,8 @@
         <span class="font-code-sm text-code-sm text-on-surface-variant" v-else>Ready</span>
           <div class="h-4 w-[1px] bg-outline-variant"></div>
           <div class="flex gap-xs">
-            <button @click="exportCsv" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export CSV">download</button>
+            <button @click="exportBackendCsv" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export CSV">download</button>
+            <button @click="exportBackendJson" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export JSON">data_object</button>
           </div>
         </div>
       </div>
@@ -135,7 +136,12 @@ import { linter, type Diagnostic } from '@codemirror/lint'
 import { sql, PostgreSQL, MySQL, SQLite, StandardSQL, type SQLDialect } from '@codemirror/lang-sql'
 import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
 import { editorApi, type LintIssue, type SchemaSuggestion } from '@/api/editor'
-import { connections, loadConnections, selectedConnectionId, pendingQuery, currentSql, bumpSchema } from '@/store/app'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/app'
+import { exportApi } from '@/api/export'
+const appStore = useAppStore()
+const { connections, selectedConnectionId, pendingQuery, currentSql } = storeToRefs(appStore)
+const { loadConnections, bumpSchema } = appStore
 
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 const results = ref<QueryResult | null>(null)
@@ -617,6 +623,44 @@ async function saveSql() {
   }
   toastMsg.value = 'query.sql saved'
   setTimeout(() => { toastMsg.value = '' }, 3000)
+}
+
+async function exportBackendCsv() {
+  if (!selectedConnectionId.value || !currentSql.value.trim()) return
+  try {
+    const csv = await exportApi.csv(selectedConnectionId.value, currentSql.value)
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'export_' + new Date().toISOString().slice(0, 10) + '.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+    toastMsg.value = 'CSV downloaded'
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  } catch (e: any) {
+    toastMsg.value = 'Export failed: ' + (e.message || 'unknown error')
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  }
+}
+
+async function exportBackendJson() {
+  if (!selectedConnectionId.value || !currentSql.value.trim()) return
+  try {
+    const json = await exportApi.json(selectedConnectionId.value, currentSql.value)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'export_' + new Date().toISOString().slice(0, 10) + '.json'
+    a.click()
+    URL.revokeObjectURL(url)
+    toastMsg.value = 'JSON downloaded'
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  } catch (e: any) {
+    toastMsg.value = 'Export failed: ' + (e.message || 'unknown error')
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  }
 }
 
 async function exportCsv() {
