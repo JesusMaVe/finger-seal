@@ -1,14 +1,16 @@
 /**
  * Checks for updates using the Tauri updater plugin.
- * Call this on app startup to notify the user of available updates.
+ * Call on app startup — works only inside Tauri webview.
  *
- * ponytail: simple fire-and-forget check. No background polling.
- * Upgrade: add periodic check + silent download if needed.
+ * ponytail: one-shot check on launch. No background polling.
  */
 export async function checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string } | null> {
+  // Not in Tauri context — skip
+  if (!window.__TAURI_INTERNALS__) return null
+
   try {
     const { check } = await import('@tauri-apps/plugin-updater')
-    const { relaunch } = await import('@tauri-apps/api/process')
+    const { relaunch } = await import('@tauri-apps/plugin-process')
 
     const update = await check()
     if (!update?.available) return { available: false }
@@ -22,7 +24,6 @@ export async function checkForUpdate(): Promise<{ available: boolean; version?: 
     await relaunch()
     return { available: true, version: update.version }
   } catch {
-    // Not running in Tauri (browser dev) or updater not configured
     return null
   }
 }
