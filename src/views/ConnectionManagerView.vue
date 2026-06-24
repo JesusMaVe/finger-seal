@@ -146,13 +146,13 @@
           <h3 class="font-headline-md text-[16px] font-bold text-on-surface">Saved Connections</h3>
         </div>
         <div class="divide-y divide-outline-variant/40">
-          <div v-for="conn in connections" :key="conn.id" class="flex items-center justify-between px-md py-sm hover:bg-surface-variant transition-colors">
+          <div v-for="conn in connections" :key="conn.id" @click="selectConnection(conn)" class="flex items-center justify-between px-md py-sm hover:bg-surface-variant transition-colors cursor-pointer">
             <div class="flex items-center gap-md">
               <span class="font-code-md text-on-surface">{{ conn.name }}</span>
               <span class="text-code-sm text-outline bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/30">{{ conn.dbType }}</span>
               <span class="text-body-sm text-on-surface-variant">{{ conn.host }}:{{ conn.port }}/{{ conn.database }}</span>
             </div>
-            <button @click="deleteConnection(conn.id!)" class="material-symbols-outlined text-[18px] text-outline-variant hover:text-error transition-colors">delete</button>
+            <button @click.stop="deleteConnection(conn.id!)" class="material-symbols-outlined text-[18px] text-outline-variant hover:text-error transition-colors">delete</button>
           </div>
         </div>
       </section>
@@ -164,8 +164,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { connections, loadConnections } from '@/store/app'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/app'
+const { connections } = storeToRefs(useAppStore())
+const { loadConnections } = useAppStore()
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
+import { savePassword, getPassword, deletePassword } from '@/tauri/credentials'
 
 const form = ref<ConnectionConfig>({
   name: '',
@@ -204,7 +208,10 @@ async function saveConnection() {
   error.value = ''
   success.value = ''
   try {
-    await connectionsApi.create(form.value)
+    const conn = await connectionsApi.create(form.value)
+    if (conn.id && form.value.password) {
+      await savePassword(conn.id, form.value.password)
+    }
     await loadConnections()
     success.value = 'Connection saved!'
   } catch (e: any) {
@@ -222,9 +229,18 @@ function selectDbType(type: ConnectionConfig['dbType']) {
   else form.value.port = 0
 }
 
+async function selectConnection(conn: ConnectionConfig) {
+  form.value = { ...conn }
+  if (conn.id) {
+    const pw = await getPassword(conn.id)
+    if (pw !== null) form.value.password = pw
+  }
+}
+
 async function deleteConnection(id: number) {
   try {
     await connectionsApi.delete(id)
+    await deletePassword(id)
     await loadConnections()
   } catch {}
 }
