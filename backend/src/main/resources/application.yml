@@ -15,3 +15,7 @@ spring:
       enabled: false
   jackson:
     default-property-inclusion: non_null
+
+app:
+  encryption:
+    key: ${APP_ENCRYPTION_KEY:CHANGEME}

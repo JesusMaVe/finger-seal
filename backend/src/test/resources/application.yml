@@ -9,3 +9,7 @@ spring:
       mode: always
   jackson:
     default-property-inclusion: non_null
+
+app:
+  encryption:
+    key: 81PT2Mir69+Ker8SH8Tiq5nALaeTj1a2OYtk2hyZLCc=
