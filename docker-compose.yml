@@ -7,7 +7,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:h2:file:/data/dataforge;DB_CLOSE_ON_EXIT=FALSE
-      - APP_ENCRYPTION_KEY=${APP_ENCRYPTION_KEY:-CHANGEME}
+      - APP_ENCRYPTION_KEY=${APP_ENCRYPTION_KEY:-HfuLI1phOsxsMfSfijZ03D2+QtJy3tAENrHBFfiZkNo=}
     volumes:
       - dataforge-data:/data
 
@@ -21,6 +21,24 @@ services:
       POSTGRES_PASSWORD: fingerseal
     volumes:
       - pg-data:/var/lib/postgresql/data
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    depends_on:
+      - prometheus
 
 volumes:
   dataforge-data:
