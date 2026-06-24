@@ -38,5 +38,17 @@
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "",
+      "endpoints": [
+        "https://raw.githubusercontent.com/OWNER_REPO/REPO_NAME/refs/tags/v{{version}}/latest.json",
+        "https://github.com/OWNER_REPO/REPO_NAME/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

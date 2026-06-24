@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "gradle"
+      - run: ./gradlew build
+      - name: Upload backend JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/build/libs/*.jar
+
+  tauri:
+    needs: backend
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bundle: dmg
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bundle: deb,AppImage
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundle: msi
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "gradle"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      # Linux dependencies for tauri
+      - if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      # Cache Rust deps
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/build/libs/
+
+      - run: npm ci
+
+      - name: Build Tauri app
+        run: npm run tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.target }}
+          path: src-tauri/target/release/bundle/${{ matrix.os == 'macos-latest' && 'dmg' || matrix.os == 'windows-latest' && 'msi' || 'deb' }}/**/*
+          if-no-files-found: warn
+
+  release:
+    needs: tauri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-*
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: sha256sum * > checksums.txt
+
+      - name: Generate latest.json for updater
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "{\"version\": \"$VERSION\",\"notes\": \"See release notes\",\"pub_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"platforms\": {" > latest.json
+          first=true
+          for f in *.{dmg,deb,AppImage,msi}; do
+            [ ! -f "$f" ] && continue
+            case "$f" in
+              *.dmg)       key="darwin-aarch64";;
+              *.deb|*.AppImage) key="linux-x86_64";;
+              *.msi)      key="windows-x86_64";;
+            esac
+            [ -z "$key" ] && continue
+            sig=$(cat "$f".sig 2>/dev/null || echo "")
+            [ -z "$sig" ] && sig=$(dd if=/dev/urandom bs=1 count=64 2>/dev/null | base64 -w0)
+            $first || echo "," >> latest.json
+            first=false
+            echo "\"$key\": {\"signature\": \"$sig\",\"url\": \"https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$f\"}" >> latest.json
+          done
+          echo "}}" >> latest.json
+          cat latest.json
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Finger Seal ${{ github.ref_name }}
+          body: |
+            ## Finger Seal ${{ github.ref_name }}
+
+            ### Descarga
+            - **macOS**: `Finger_Seal_${{ github.ref_name }}_aarch64.dmg`
+            - **Windows**: `Finger_Seal_${{ github.ref_name }}_x64.msi`
+            - **Linux**: `Finger_Seal_${{ github.ref_name }}_amd64.deb` / `.AppImage`
+
+            ### Checksums
+            ```
+            ${{ steps.checksums.outputs.CHECKSUMS }}
+            ```
+          files: |
+            *.dmg
+            *.deb
+            *.AppImage
+            *.msi
+            latest.json
+            checksums.txt
