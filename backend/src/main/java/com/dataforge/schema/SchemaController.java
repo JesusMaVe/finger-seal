@@ -78,6 +78,7 @@ public class SchemaController {
     public List<Map<String, Object>> tableColumns(@PathVariable Long id, @PathVariable String tableName) throws SQLException {
         ConnectionConfig config = connectionRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
+        validateTableName(tableName);
         DataSource ds = dataSourceManager.getOrCreate(config);
         List<Map<String, Object>> cols = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
@@ -162,6 +163,7 @@ public class SchemaController {
     public List<Map<String, Object>> tableForeignKeys(@PathVariable Long id, @PathVariable String tableName) throws SQLException {
         ConnectionConfig config = connectionRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
+        validateTableName(tableName);
         DataSource ds = dataSourceManager.getOrCreate(config);
         List<Map<String, Object>> fks = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
