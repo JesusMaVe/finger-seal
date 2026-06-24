@@ -96,7 +96,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { activeView, selectedConnectionId, selectedTable, connections, loadConnections, theme, schemaVersion } from '@/store/app'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/app'
+const appStore = useAppStore()
+const { activeView, selectedConnectionId, selectedTable, connections, theme, schemaVersion } = storeToRefs(appStore)
+const { loadConnections } = appStore
 import { schemasApi, type TableInfo } from '@/api/schemas'
 
 const tables = ref<TableInfo[]>([])

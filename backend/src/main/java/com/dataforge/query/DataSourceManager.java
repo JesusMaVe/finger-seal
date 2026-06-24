@@ -1,5 +1,6 @@
 package com.dataforge.query;
 
+import com.dataforge.config.EncryptionService;
 import com.dataforge.connection.ConnectionConfig;
 import com.dataforge.connection.SshTunnelService;
 import com.zaxxer.hikari.HikariConfig;
@@ -15,9 +16,11 @@ public class DataSourceManager {
 
     private final Map<Long, HikariDataSource> pools = new ConcurrentHashMap<>();
     private final SshTunnelService sshTunnelService;
+    private final EncryptionService encryptionService;
 
-    public DataSourceManager(SshTunnelService sshTunnelService) {
+    public DataSourceManager(SshTunnelService sshTunnelService, EncryptionService encryptionService) {
         this.sshTunnelService = sshTunnelService;
+        this.encryptionService = encryptionService;
     }
 
     public DataSource getOrCreate(ConnectionConfig config) {
@@ -37,7 +40,12 @@ public class DataSourceManager {
         String url = buildJdbcUrl(config, dbHost, dbPort);
         hikari.setJdbcUrl(url);
         hikari.setUsername(config.getUsername());
-        hikari.setPassword(config.getPassword());
+        // ponytail: decrypt if password was encrypted at rest (ENC: prefix)
+        String password = config.getPassword();
+        if (password != null && password.startsWith("ENC:")) {
+            password = encryptionService.decrypt(password.substring(4));
+        }
+        hikari.setPassword(password);
         hikari.setMaximumPoolSize(5);
         hikari.setMinimumIdle(1);
         hikari.setIdleTimeout(300_000);

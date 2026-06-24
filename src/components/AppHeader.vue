@@ -20,5 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { activeView } from '@/store/app'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/app'
+const { activeView } = storeToRefs(useAppStore())
 </script>

@@ -24,7 +24,7 @@ Vue 3 + Vite + Tailwind CSS v4 database management UI (SQL editor, connection ma
 - **Path alias:** `@/` maps to `src/` (configured in both `vite.config.ts` and `tsconfig.json`).
 - **Icons:** Google Material Symbols Outlined font. Use `<span class="material-symbols-outlined">icon_name</span>`. Fill via `style="font-variation-settings: 'FILL' 1;"`.
 - **Fonts:** Inter (body/headlines), JetBrains Mono (code). Loaded via Google Fonts in `index.html`.
-- **State:** Simple `ref()` exports from `src/store/app.ts`. No Pinia/Vuex.
+- **State:** Pinia store via `useAppStore()` from `src/store/app.ts`. Access reactive state with `storeToRefs()`, actions by destructuring from the store.
 - **View routing:** Manual `switch` on `activeView` ref in `App.vue`. No Vue Router.
 - **Styling:** Tailwind utility classes with custom theme tokens (`text-primary`, `bg-surface-container-low`, etc.). Token names follow Material Design naming.
 

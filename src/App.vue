@@ -13,9 +13,14 @@
 
 <script setup lang="ts">
 import { computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
-import { activeView, theme, applyTheme } from './store/app'
+import { useAppStore } from './store/app'
+
+const appStore = useAppStore()
+const { activeView, theme } = storeToRefs(appStore)
+const { applyTheme } = appStore
 
 onMounted(() => applyTheme(theme.value))
 watch(theme, applyTheme)

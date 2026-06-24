@@ -18,7 +18,7 @@ spring:
 
 app:
   encryption:
-    key: ${APP_ENCRYPTION_KEY:CHANGEME}
+    key: ${APP_ENCRYPTION_KEY:HfuLI1phOsxsMfSfijZ03D2+QtJy3tAENrHBFfiZkNo=}
 
 management:
   endpoints:

@@ -172,7 +172,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { connections, selectedConnectionId, wsConnected, wsLogs } from '@/store/app'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '@/store/app'
+const appStore = useAppStore()
+const { connections, selectedConnectionId, wsConnected, wsLogs } = storeToRefs(appStore)
 import { schemasApi } from '@/api/schemas'
 
 const metrics = ref<Record<string, any>>({})
