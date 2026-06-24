@@ -38,6 +38,10 @@
       <div class="flex items-center justify-between px-md py-xs border-b border-outline-variant bg-surface-container">
         <div class="flex gap-md items-center">
           <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Data</span>
+          <label class="flex items-center gap-xs cursor-pointer">
+            <input type="checkbox" v-model="streamingEnabled" class="accent-primary" />
+            <span class="text-body-sm text-on-surface-variant">Stream</span>
+          </label>
         </div>
         <div class="flex items-center gap-md">
           <span class="font-code-sm text-code-sm text-on-surface-variant" v-if="results">
@@ -126,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, shallowRef } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, shallowRef, nextTick } from 'vue'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightSpecialChars, ViewPlugin } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
@@ -139,6 +143,7 @@ import { editorApi, type LintIssue, type SchemaSuggestion } from '@/api/editor'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/store/app'
 import { exportApi } from '@/api/export'
+import { streamQuery, type StreamEvent } from '@/api/stream'
 const appStore = useAppStore()
 const { connections, selectedConnectionId, pendingQuery, currentSql } = storeToRefs(appStore)
 const { loadConnections, bumpSchema } = appStore
@@ -146,6 +151,10 @@ const { loadConnections, bumpSchema } = appStore
 const currentConn = computed(() => connections.value.find(c => c.id === selectedConnectionId.value))
 const results = ref<QueryResult | null>(null)
 const running = ref(false)
+const streamingEnabled = ref(false)
+const streamingActive = ref(false)
+const streamingProgress = ref(0)
+let abortStream: (() => void) | null = null
 const showHistory = ref(false)
 const queryHistory = ref<QueryHistoryEntry[]>([])
 const toastMsg = ref('')
@@ -570,6 +579,44 @@ async function runQuery() {
   if (!selectedConnectionId.value || !currentSql.value.trim()) return
   running.value = true
   results.value = null
+
+  if (streamingEnabled.value) {
+    streamingActive.value = true
+    streamingProgress.value = 0
+    const startTime = Date.now()
+    results.value = { columns: [], rows: [], affectedRows: 0, elapsedMs: 0 }
+    abortStream = streamQuery(
+      selectedConnectionId.value,
+      currentSql.value,
+      (event: StreamEvent) => {
+        if (event.type === 'header') {
+          results.value = { columns: event.columns, rows: [], affectedRows: 0, elapsedMs: 0 }
+        } else if (event.type === 'row') {
+          const row: Record<string, unknown> = {}
+          if (results.value.columns) {
+            event.values.forEach((v, i) => { row[results.value.columns![i]] = v })
+          }
+          results.value.rows = [...(results.value.rows ?? []), row]
+          streamingProgress.value++
+        } else if (event.type === 'complete') {
+          streamingActive.value = false
+          running.value = false
+          results.value.elapsedMs = Date.now() - startTime
+        } else if (event.type === 'error') {
+          streamingActive.value = false
+          running.value = false
+          results.value.error = event.message
+        }
+      },
+      (err) => {
+        streamingActive.value = false
+        running.value = false
+        results.value!.error = err.message
+      }
+    )
+    return
+  }
+
   try {
     results.value = await queryApi.execute(selectedConnectionId.value, currentSql.value)
     if (DDL_RE.test(currentSql.value)) bumpSchema()
