@@ -49,9 +49,22 @@
         </span>
         <span class="font-code-sm text-code-sm text-on-surface-variant" v-else>Ready</span>
           <div class="h-4 w-[1px] bg-outline-variant"></div>
-          <div class="flex gap-xs">
-            <button @click="exportBackendCsv" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export CSV">download</button>
-            <button @click="exportBackendJson" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export JSON">data_object</button>
+          <div class="flex gap-xs relative">
+            <button @click="showExportMenu = !showExportMenu" class="material-symbols-outlined text-[18px] text-on-surface-variant hover:text-primary transition-all" title="Export">download</button>
+            <div v-if="showExportMenu" class="absolute bottom-full right-0 mb-1 bg-surface-bright border border-outline-variant rounded-lg shadow-xl z-50 py-1 min-w-[160px]">
+              <button @click="doExport('csv')" class="w-full text-left px-md py-1.5 text-body-sm hover:bg-surface-container-low flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]">table</span> CSV
+              </button>
+              <button @click="doExport('json')" class="w-full text-left px-md py-1.5 text-body-sm hover:bg-surface-container-low flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]">data_object</span> JSON
+              </button>
+              <button @click="doExport('xlsx')" class="w-full text-left px-md py-1.5 text-body-sm hover:bg-surface-container-low flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]">grid_on</span> Excel
+              </button>
+              <button @click="doExport('sql')" class="w-full text-left px-md py-1.5 text-body-sm hover:bg-surface-container-low flex items-center gap-xs">
+                <span class="material-symbols-outlined text-[16px]">code</span> SQL INSERT
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -156,6 +169,7 @@ const streamingActive = ref(false)
 const streamingProgress = ref(0)
 let abortStream: (() => void) | null = null
 const showHistory = ref(false)
+const showExportMenu = ref(false)
 const queryHistory = ref<QueryHistoryEntry[]>([])
 const toastMsg = ref('')
 const lintIssues = ref<LintIssue[]>([])
@@ -689,6 +703,43 @@ async function exportBackendCsv() {
     toastMsg.value = 'Export failed: ' + (e.message || 'unknown error')
     setTimeout(() => { toastMsg.value = '' }, 3000)
   }
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function dateStr() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+async function doExport(format: 'csv' | 'json' | 'xlsx' | 'sql') {
+  showExportMenu.value = false
+  if (!selectedConnectionId.value || !currentSql.value.trim()) return
+  try {
+    if (format === 'xlsx') {
+      const blob = await exportApi.xlsx(selectedConnectionId.value, currentSql.value)
+      downloadBlob(blob, `export_${dateStr()}.xlsx`)
+    } else if (format === 'sql') {
+      const sql = await exportApi.sql(selectedConnectionId.value, currentSql.value)
+      downloadBlob(new Blob([sql], { type: 'text/plain' }), `export_${dateStr()}.sql`)
+    } else if (format === 'csv') {
+      const csv = await exportApi.csv(selectedConnectionId.value, currentSql.value)
+      downloadBlob(new Blob([csv], { type: 'text/csv' }), `export_${dateStr()}.csv`)
+    } else {
+      const json = await exportApi.json(selectedConnectionId.value, currentSql.value)
+      downloadBlob(new Blob([json], { type: 'application/json' }), `export_${dateStr()}.json`)
+    }
+    toastMsg.value = `${format.toUpperCase()} downloaded`
+  } catch (e: any) {
+    toastMsg.value = `Export failed: ${e.message}`
+  }
+  setTimeout(() => { toastMsg.value = '' }, 3000)
 }
 
 async function exportBackendJson() {

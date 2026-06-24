@@ -31,7 +31,11 @@
            </button>
            <button @click="exportCSV" :disabled="!previewData.length" class="bg-surface-container border border-subtle px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium btn-transition hover:bg-surface-container-high text-on-surface disabled:opacity-50 min-w-[90px] justify-center">
               <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-bounce': exporting }">{{ exporting ? 'downloading' : 'download' }}</span>
-              <span>{{ exporting ? 'Downloading' : 'Export' }}</span>
+              <span>{{ exporting ? 'Downloading' : 'CSV' }}</span>
+           </button>
+           <button @click="exportXLSX" :disabled="!previewData.length" class="bg-surface-container border border-subtle px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium btn-transition hover:bg-surface-container-high text-on-surface disabled:opacity-50">
+              <span class="material-symbols-outlined text-[18px]">grid_on</span>
+              <span>XLSX</span>
            </button>
            <button @click="queryTable"
   class="bg-primary text-on-primary px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-bold btn-transition hover:opacity-90 active:scale-[0.98]">
@@ -276,6 +280,7 @@
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { schemasApi, type ColumnInfo } from '@/api/schemas'
 import { queryApi } from '@/api/query'
+import { exportApi } from '@/api/export'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/store/app'
 const appStore = useAppStore()
@@ -410,6 +415,24 @@ function exportCSV() {
     toastMsg.value = `${selectedTable.value}.csv downloaded`
     setTimeout(() => { toastMsg.value = '' }, 3000)
   }, 100)
+}
+
+async function exportXLSX() {
+  if (!selectedConnectionId.value || !selectedTable.value) return
+  try {
+    const blob = await exportApi.xlsx(selectedConnectionId.value, `SELECT * FROM ${selectedTable.value}`)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+    toastMsg.value = `${selectedTable.value}.xlsx downloaded`
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  } catch (e: any) {
+    toastMsg.value = `Export failed: ${e.message}`
+    setTimeout(() => { toastMsg.value = '' }, 3000)
+  }
 }
 
 function escapeCsv(val: string): string {
