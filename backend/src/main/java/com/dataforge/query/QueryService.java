@@ -83,6 +83,7 @@ public class QueryService {
         List<String> columns = new ArrayList<>();
         List<Map<String, Object>> rows = new ArrayList<>();
 
+        jdbc.setQueryTimeout(30);
         jdbc.query(sql, (ResultSetExtractor<Void>) rs -> {
             ResultSetMetaData meta = rs.getMetaData();
             int colCount = meta.getColumnCount();
@@ -104,6 +105,7 @@ public class QueryService {
     }
 
     private QueryResult executeUpdate(JdbcTemplate jdbc, String sql, long start) {
+        jdbc.setQueryTimeout(30);
         int affected = jdbc.update(sql);
         long elapsed = System.currentTimeMillis() - start;
         return new QueryResult(affected, elapsed);
