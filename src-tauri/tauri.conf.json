@@ -41,10 +41,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM1QkE3RjJBQjBDRUIxNDkKUldSSnNjNndLbis2TmNTbTFTaGJoOFA2SXdpU3Btd2VsRmNtQkczVnRxNDJqdnJKbDcrUzEwN3QK",
       "endpoints": [
-        "https://raw.githubusercontent.com/OWNER_REPO/REPO_NAME/refs/tags/v{{version}}/latest.json",
-        "https://github.com/OWNER_REPO/REPO_NAME/releases/latest/download/latest.json"
+        "https://github.com/JesusMaVe/finger-seal/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
