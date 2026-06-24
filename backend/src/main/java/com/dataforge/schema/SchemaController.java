@@ -17,6 +17,17 @@ public class SchemaController {
     private final ConnectionRepository connectionRepo;
     private final DataSourceManager dataSourceManager;
 
+    // ponytail: simple alfanumérico + guion bajo. Revisar si alguna DB requiere caracteres especiales.
+    private static final java.util.regex.Pattern SAFE_IDENTIFIER =
+        java.util.regex.Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_$]*$");
+
+    private String validateTableName(String tableName) {
+        if (!SAFE_IDENTIFIER.matcher(tableName).matches()) {
+            throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
+        return tableName;
+    }
+
     public SchemaController(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
@@ -102,9 +113,10 @@ public class SchemaController {
         JdbcTemplate jdbc = new JdbcTemplate(ds);
         // Oracle stores identifiers in uppercase by default
         String effectiveTableName = config.getDbType().equals("ORACLE") ? tableName.toUpperCase() : tableName;
+        String safeTable = validateTableName(effectiveTableName);
         String sql = switch (config.getDbType()) {
-            case "ORACLE" -> "SELECT * FROM " + effectiveTableName + " FETCH FIRST " + limit + " ROWS ONLY";
-            default -> "SELECT * FROM " + effectiveTableName + " LIMIT " + limit;
+            case "ORACLE" -> "SELECT * FROM " + safeTable + " FETCH FIRST " + limit + " ROWS ONLY";
+            default -> "SELECT * FROM " + safeTable + " LIMIT " + limit;
         };
         return jdbc.query(sql, (ResultSet rs) -> {
             ResultSetMetaData meta = rs.getMetaData();
@@ -129,11 +141,12 @@ public class SchemaController {
         JdbcTemplate jdbc = new JdbcTemplate(ds);
         // Oracle stores identifiers in uppercase by default
         String effectiveTableName = config.getDbType().equals("ORACLE") ? tableName.toUpperCase() : tableName;
+        String safeTable = validateTableName(effectiveTableName);
         String sql = switch (config.getDbType()) {
             case "POSTGRESQL" -> "SELECT reltuples::bigint AS row_count, pg_size_pretty(pg_total_relation_size(?)) AS total_size, pg_size_pretty(pg_indexes_size(?)) AS index_size FROM pg_class WHERE relname = ?";
             case "MYSQL" -> "SELECT TABLE_ROWS AS row_count, ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS total_size_mb, ROUND(INDEX_LENGTH / 1024 / 1024, 1) AS index_size_mb FROM information_schema.tables WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()";
-            case "SQLITE" -> "SELECT COUNT(*) AS row_count, 'N/A' AS total_size FROM " + effectiveTableName;
-            case "ORACLE" -> "SELECT (SELECT COUNT(*) FROM " + effectiveTableName + ") AS \"row_count\", (SELECT NVL(SUM(bytes), 0) FROM user_segments WHERE segment_name = '" + effectiveTableName + "') AS \"total_size\" FROM DUAL";
+            case "SQLITE" -> "SELECT COUNT(*) AS row_count, 'N/A' AS total_size FROM " + safeTable;
+            case "ORACLE" -> "SELECT (SELECT COUNT(*) FROM " + safeTable + ") AS \"row_count\", (SELECT NVL(SUM(bytes), 0) FROM user_segments WHERE segment_name = '" + safeTable + "') AS \"total_size\" FROM DUAL";
             default -> throw new IllegalArgumentException("Unsupported DB type");
         };
         if (config.getDbType().equals("POSTGRESQL")) {
