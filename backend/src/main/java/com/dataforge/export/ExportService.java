@@ -17,10 +17,15 @@ public class ExportService {
 
     private final ConnectionRepository connectionRepo;
     private final DataSourceManager dataSourceManager;
+    private final ExportXlsxService exportXlsxService;
+    private final ExportSqlService exportSqlService;
 
-    public ExportService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager) {
+    public ExportService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager,
+                         ExportXlsxService exportXlsxService, ExportSqlService exportSqlService) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
+        this.exportXlsxService = exportXlsxService;
+        this.exportSqlService = exportSqlService;
     }
 
     public String exportJson(Long connectionId, String sql) {
@@ -77,6 +82,14 @@ public class ExportService {
             }
             return sb.toString();
         });
+    }
+
+    public byte[] exportXlsx(Long connectionId, String sql) {
+        return exportXlsxService.exportXlsx(connectionId, sql);
+    }
+
+    public String exportSql(Long connectionId, String sql, String tableName) {
+        return exportSqlService.exportSql(connectionId, sql, tableName);
     }
 
     private String escapeCsv(String val) {

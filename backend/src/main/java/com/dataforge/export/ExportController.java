@@ -38,4 +38,27 @@ public class ExportController {
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.csv")
             .body(csv);
     }
+
+    @PostMapping("/xlsx")
+    public ResponseEntity<byte[]> exportXlsx(@RequestBody Map<String, Object> request) {
+        Long connectionId = Long.valueOf(request.get("connectionId").toString());
+        String sql = (String) request.get("sql");
+        byte[] data = exportService.exportXlsx(connectionId, sql);
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.xlsx")
+            .body(data);
+    }
+
+    @PostMapping("/sql")
+    public ResponseEntity<String> exportSql(@RequestBody Map<String, Object> request) {
+        Long connectionId = Long.valueOf(request.get("connectionId").toString());
+        String sql = (String) request.get("sql");
+        String tableName = (String) request.get("tableName");
+        String result = exportService.exportSql(connectionId, sql, tableName);
+        return ResponseEntity.ok()
+            .contentType(MediaType.TEXT_PLAIN)
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export.sql")
+            .body(result);
+    }
 }

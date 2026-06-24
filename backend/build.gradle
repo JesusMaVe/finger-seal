@@ -49,6 +49,9 @@ dependencies {
     // SSH tunneling
     implementation 'com.github.mwiede:jsch:0.2.21'
 
+    // Apache POI for XLSX export
+    implementation 'org.apache.poi:poi-ooxml:5.4.0'
+
     // Vault secrets management (no auto-config, manual via VaultConfig)
     implementation 'org.springframework.vault:spring-vault-core:3.1.2'
     implementation 'org.springframework.cloud:spring-cloud-commons:4.2.1'
