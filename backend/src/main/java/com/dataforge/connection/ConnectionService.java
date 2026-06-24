@@ -1,12 +1,16 @@
 package com.dataforge.connection;
 
 import com.dataforge.config.EncryptionService;
+import com.dataforge.config.VaultConfig;
 import com.dataforge.query.DataSourceManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.vault.core.VaultTemplate;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -15,11 +19,23 @@ public class ConnectionService {
     private final ConnectionRepository repo;
     private final DataSourceManager dataSourceManager;
     private final EncryptionService encryptionService;
+    private final boolean vaultEnabled;
+    private final VaultTemplate vaultTemplate;
+    private final String vaultMountPath;
 
-    public ConnectionService(ConnectionRepository repo, DataSourceManager dataSourceManager, EncryptionService encryptionService) {
+    public ConnectionService(
+            ConnectionRepository repo,
+            DataSourceManager dataSourceManager,
+            EncryptionService encryptionService,
+            @Value("${vault.enabled:false}") boolean vaultEnabled,
+            @Autowired(required = false) VaultTemplate vaultTemplate,
+            @Value("${vault.mount-path:fingerseal}") String vaultMountPath) {
         this.repo = repo;
         this.dataSourceManager = dataSourceManager;
         this.encryptionService = encryptionService;
+        this.vaultEnabled = vaultEnabled;
+        this.vaultTemplate = vaultTemplate;
+        this.vaultMountPath = vaultMountPath;
     }
 
     public List<ConnectionConfig> list() {
@@ -38,6 +54,20 @@ public class ConnectionService {
 
     public Optional<ConnectionConfig> findById(Long id) {
         return repo.findById(id).map(c -> {
+            // 1. Try Vault first (if configured)
+            if (vaultEnabled && vaultTemplate != null) {
+                try {
+                    Map<String, Object> vaultCreds = VaultConfig.fetchCredentials(
+                        vaultTemplate, vaultMountPath, "connections/" + id);
+                    if (vaultCreds != null && vaultCreds.get("password") != null) {
+                        c.setPassword((String) vaultCreds.get("password"));
+                        return c;
+                    }
+                } catch (Exception e) {
+                    // Vault unavailable, fall through to local
+                }
+            }
+            // 2. Fallback to local encrypted storage
             if (c.getPassword() != null && c.getPassword().startsWith("ENC:")) {
                 try {
                     c.setPassword(encryptionService.decrypt(c.getPassword().substring(4)));
