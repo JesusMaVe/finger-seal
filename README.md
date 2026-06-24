@@ -64,7 +64,14 @@ Cliente de bases de datos moderno — editor SQL, gestor de conexiones, explorad
 | Edición inline de datos (doble click → UPDATE) | ✅ |
 | Dashboard con métricas + heatmap de queries | ✅ |
 | WebSocket event bus en tiempo real | ✅ |
-| Exportación CSV + JSON (server-side) | ✅ |
+| Exportación CSV + JSON + XLSX + SQL INSERT | ✅ |
+| SSE streaming de resultados de queries | ✅ |
+| HashiCorp Vault integration (secrets management) | ✅ |
+| OpenTelemetry tracing (manual spans + OTel agent) | ✅ |
+| Grafana dashboard (latency, throughput, errors) | ✅ |
+| Playwright E2E smoke tests | ✅ |
+| Testcontainers integration tests (PostgreSQL) | ✅ |
+| WebSocket event broadcast tests | ✅ |
 | Gestor de conexiones (CRUD + test) | ✅ |
 | SSH tunneling para conexiones remotas | ✅ |
 | Cifrado de credenciales en reposo (AES-GCM) | ✅ |
@@ -79,9 +86,20 @@ Cliente de bases de datos moderno — editor SQL, gestor de conexiones, explorad
 - **SQL Injection:** nombres de tabla sanitizados con regex `SAFE_IDENTIFIER`
 - **Credenciales en reposo:** cifradas con AES-256/GCM, prefijo `ENC:`
 - **Keychain del SO:** contraseñas guardadas en keyring nativo vía Tauri
+- **HashiCorp Vault:** secrets management opcional, deshabilitado por defecto
 - **Query timeout:** 30s para queries, 10s para edición inline
 - **SSH tunneling:** conexiones remotas seguras vía JSch
 - **CORS:** configurado para desarrollo local
+
+### HashiCorp Vault
+
+```bash
+docker compose -f docker-compose.vault.yml up -d
+scripts/vault-init.sh
+```
+
+Set `vault.enabled: true` in config to activate.
+Docs: `docs/superpowers/vault-setup.md`
 
 ## Observability
 
@@ -90,6 +108,24 @@ Metrics endpoint: `http://localhost:8080/actuator/prometheus`
 Métricas disponibles:
 - `query.execution` — histograma de tiempos de ejecución de queries
 - Métricas JVM, heap, threads
+
+### Observability Stack
+
+```bash
+docker compose -f docker-compose.observability.yml up -d
+```
+
+| Service | URL |
+|---------|-----|
+| Grafana | http://localhost:3001 (admin/admin) |
+| Prometheus | http://localhost:9090 |
+| Loki | http://localhost:3100 |
+| Tempo (OTLP) | :4317 gRPC / :4318 HTTP |
+
+Pre-configured dashboard: **Finger Seal — Query Performance**
+(latency P50/P95/P99, throughput, error rates)
+
+Docs: `docs/superpowers/observability-setup.md`
 
 ## Development
 
@@ -115,6 +151,9 @@ npm run tauri dev
 # Type check
 npm run lint
 
+# E2E smoke tests (requires dev server running on :3000)
+npm run test:e2e
+
 # Production build (frontend only)
 npm run build
 
@@ -137,6 +176,25 @@ Connection config for the app:
 ## Environment
 
 Copy `.env.example` to `.env` and add your `GEMINI_API_KEY` if AI features are needed.
+
+## Docs
+
+| Document | Description |
+|----------|-------------|
+| `docs/superpowers/plans/2026-06-23-max-features-plan.md` | Full implementation plan (Vault, OTel, Testing, SSE, Export) |
+| `docs/superpowers/vault-setup.md` | HashiCorp Vault setup guide |
+| `docs/superpowers/observability-setup.md` | Grafana + Prometheus + Loki + Tempo setup |
+| `ANALISIS-BLUEPRINT.md` | Gap analysis vs architecture blueprint |
+
+## Testing
+
+```bash
+# Backend tests (22 integration + unit tests)
+cd backend && ./gradlew test
+
+# E2E smoke tests (requires dev server running on :3000)
+npm run test:e2e
+```
 
 ## Architecture Notes
 
