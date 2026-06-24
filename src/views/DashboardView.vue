@@ -8,7 +8,7 @@
           <p class="font-body-md text-body-md text-on-surface-variant mt-xs">{{ currentConn ? currentConn.host + ':' + currentConn.port + '/' + currentConn.database : 'No connection selected' }}</p>
         </div>
         <div class="flex gap-sm">
-          <div class="flex items-center gap-xs bg-surface-container-low px-sm py-xs rounded border border-outline-variant shadow-sm shadow-black/5">
+          <div class="flex items-center gap-xs bg-surface-container-low px-sm py-xs rounded border border-subtle">
             <span class="w-2 h-2 rounded-full" :class="wsConnected ? 'bg-primary animate-pulse' : 'bg-error'"></span>
             <span class="font-code-sm text-code-sm uppercase font-bold tracking-widest" :class="wsConnected ? 'text-primary' : 'text-error'">{{ wsConnected ? 'Connected' : 'Disconnected' }}</span>
           </div>
@@ -18,58 +18,58 @@
       <!-- Bento Grid Status Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-md">
         <!-- Active Queries -->
-        <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default">
+        <div class="md:col-span-1 bg-surface-container-low p-md border border-subtle rounded-lg flex flex-col justify-between h-32 hover-lift cursor-default">
           <div class="flex justify-between items-start">
             <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Active Queries</span>
-            <span class="material-symbols-outlined text-primary text-[20px]">memory</span>
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">memory</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-on-surface">{{ metrics.activeQueries ?? '—' }}</div>
+            <div class="font-headline-lg text-headline-lg text-on-surface">{{ metrics.activeQueries ?? '—' }}</div>
             <div class="w-full bg-surface-variant h-1 rounded-full mt-2 overflow-hidden flex">
               <div class="h-full bg-primary rounded-full transition-all duration-500" :style="{ width: Math.min((metrics.activeQueries ?? 0) / 10 * 100, 100) + '%' }"></div>
             </div>
           </div>
         </div>
         <!-- Transactions -->
-        <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default">
+        <div class="md:col-span-1 bg-surface-container-low p-md border border-subtle rounded-lg flex flex-col justify-between h-32 hover-lift cursor-default">
           <div class="flex justify-between items-start">
             <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Transactions</span>
-            <span class="material-symbols-outlined text-primary text-[20px]">sync_alt</span>
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">sync_alt</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-on-surface">{{ metrics.transactions != null ? metrics.transactions.toLocaleString() : '—' }}</div>
+            <div class="font-headline-lg text-headline-lg text-on-surface">{{ metrics.transactions != null ? metrics.transactions.toLocaleString() : '—' }}</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-if="selectedConnectionId">Total since DB start</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-else>Connect to a database</div>
           </div>
         </div>
         <!-- Connections -->
-        <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default">
+        <div class="md:col-span-1 bg-surface-container-low p-md border border-subtle rounded-lg flex flex-col justify-between h-32 hover-lift cursor-default">
           <div class="flex justify-between items-start">
             <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Active Conns</span>
-            <span class="material-symbols-outlined text-primary text-[20px]">hub</span>
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">hub</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-primary">{{ connections.length }}</div>
+            <div class="font-headline-lg text-headline-lg text-on-surface">{{ connections.length }}</div>
             <div class="font-code-sm text-code-sm text-outline">{{ metrics.tableCount ?? connections.length }} tables</div>
           </div>
         </div>
         <!-- Storage -->
-        <div class="md:col-span-1 bg-surface-container-high p-md border border-outline-variant rounded-lg flex flex-col justify-between h-32 hover:border-outline transition-colors cursor-default relative overflow-hidden">
+        <div class="md:col-span-1 bg-surface-container-high p-md border border-subtle rounded-lg flex flex-col justify-between h-32 hover-lift cursor-default relative overflow-hidden">
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-outline-variant to-transparent opacity-50"></div>
           <div class="flex justify-between items-start">
             <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Storage Used</span>
-            <span class="material-symbols-outlined text-primary text-[20px]">storage</span>
+            <span class="material-symbols-outlined text-on-surface-variant text-[20px]">storage</span>
           </div>
           <div>
-            <div class="font-headline-lg text-[28px] text-primary">{{ formatBytes(metrics.storageBytes) }}</div>
+            <div class="font-headline-lg text-headline-lg text-on-surface">{{ formatBytes(metrics.storageBytes) }}</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-if="metrics.tableCount != null">{{ metrics.tableCount }} tables</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant italic" v-else>Connect to a database</div>
           </div>
         </div>
 
         <!-- Large Storage Usage Chart Card -->
-        <div class="md:col-span-3 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-          <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container/30">
+        <div class="md:col-span-3 bg-surface-container-low border border-subtle rounded-xl overflow-hidden flex flex-col">
+          <div class="p-md border-b border-subtle flex justify-between items-center bg-surface-container/30">
             <span class="font-headline-md text-headline-md text-on-surface">Storage by Table</span>
           </div>
           <div class="flex-1 min-h-[220px] p-md flex items-end gap-sm relative group bg-surface">
@@ -91,7 +91,7 @@
         </div>
 
         <!-- Query Intensity Heatmap -->
-        <div class="md:col-span-1 bg-surface-container-low p-md border border-outline-variant rounded-xl flex flex-col">
+        <div class="md:col-span-1 bg-surface-container-low p-md border border-subtle rounded-xl flex flex-col">
           <span class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-sm">Query Intensity</span>
           <div class="flex flex-col gap-[2px] flex-1" v-if="heatmapWeeks.length">
             <!-- Column headers -->
@@ -123,7 +123,7 @@
       </div>
 
       <!-- Recent Activity List -->
-      <section class="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden mt-sm mb-xl drop-shadow-sm">
+      <section class="bg-surface-container-low border border-subtle rounded-xl overflow-hidden mt-sm mb-xl">
         <div class="px-md py-sm border-b border-outline-variant flex justify-between items-center bg-surface-container/50">
           <h2 class="font-headline-md text-[16px] text-on-surface">Recent Query Logs</h2>
           <button @click="showAllLogs = !showAllLogs" class="text-primary font-body-sm font-bold text-body-sm hover:underline active:opacity-80 transition-all">

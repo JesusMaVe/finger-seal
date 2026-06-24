@@ -27,6 +27,10 @@ watch(selectedConnectionId, (id) => {
 export const selectedTable = ref<string>('')
 export const pendingQuery = ref('')
 export const currentSql = ref('')
+
+// Increment after DDL to trigger sidebar table list refresh
+export const schemaVersion = ref(0)
+export function bumpSchema() { schemaVersion.value++ }
 export const connections = ref<ConnectionConfig[]>([])
 
 export function loadConnections() {

@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { activeView, selectedConnectionId, selectedTable, connections, loadConnections, theme } from '@/store/app'
+import { activeView, selectedConnectionId, selectedTable, connections, loadConnections, theme, schemaVersion } from '@/store/app'
 import { schemasApi, type TableInfo } from '@/api/schemas'
 
 const tables = ref<TableInfo[]>([])
@@ -109,12 +109,14 @@ const currentConn = computed(() =>
 onMounted(loadConnections)
 watch(activeView, () => { if (activeView.value === 'tables') loadConnections() })
 
-watch(selectedConnectionId, (id) => {
-  tables.value = []
-  selectedTable.value = ''
-  if (!id) return
+function reloadTables() {
+  const id = selectedConnectionId.value
+  if (!id) { tables.value = []; return }
   schemasApi.listTables(id).then(data => tables.value = data).catch(() => {})
-}, { immediate: true })
+}
+
+watch(selectedConnectionId, () => { selectedTable.value = ''; reloadTables() }, { immediate: true })
+watch(schemaVersion, reloadTables)
 
 function goToTable(tableName: string) {
   selectedTable.value = tableName

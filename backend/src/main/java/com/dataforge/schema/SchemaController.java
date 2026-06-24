@@ -71,8 +71,14 @@ public class SchemaController {
         List<Map<String, Object>> cols = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
             var meta = conn.getMetaData();
-            String schema = config.getDbType().equals("POSTGRESQL") ? "public" : null;
-            try (var rs = meta.getColumns(null, schema, tableName, null)) {
+            String schema = switch (config.getDbType()) {
+                case "POSTGRESQL" -> "public";
+                case "ORACLE" -> config.getUsername().toUpperCase();
+                default -> null;
+            };
+            // Oracle stores identifiers in uppercase by default
+            String effectiveTableName = config.getDbType().equals("ORACLE") ? tableName.toUpperCase() : tableName;
+            try (var rs = meta.getColumns(null, schema, effectiveTableName, null)) {
                 while (rs.next()) {
                     Map<String, Object> col = new LinkedHashMap<>();
                     col.put("name", rs.getString("COLUMN_NAME"));
@@ -94,9 +100,11 @@ public class SchemaController {
                 .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
         DataSource ds = dataSourceManager.getOrCreate(config);
         JdbcTemplate jdbc = new JdbcTemplate(ds);
+        // Oracle stores identifiers in uppercase by default
+        String effectiveTableName = config.getDbType().equals("ORACLE") ? tableName.toUpperCase() : tableName;
         String sql = switch (config.getDbType()) {
-            case "ORACLE" -> "SELECT * FROM " + tableName + " FETCH FIRST " + limit + " ROWS ONLY";
-            default -> "SELECT * FROM " + tableName + " LIMIT " + limit;
+            case "ORACLE" -> "SELECT * FROM " + effectiveTableName + " FETCH FIRST " + limit + " ROWS ONLY";
+            default -> "SELECT * FROM " + effectiveTableName + " LIMIT " + limit;
         };
         return jdbc.query(sql, (ResultSet rs) -> {
             ResultSetMetaData meta = rs.getMetaData();
@@ -119,17 +127,22 @@ public class SchemaController {
                 .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + id));
         DataSource ds = dataSourceManager.getOrCreate(config);
         JdbcTemplate jdbc = new JdbcTemplate(ds);
+        // Oracle stores identifiers in uppercase by default
+        String effectiveTableName = config.getDbType().equals("ORACLE") ? tableName.toUpperCase() : tableName;
         String sql = switch (config.getDbType()) {
             case "POSTGRESQL" -> "SELECT reltuples::bigint AS row_count, pg_size_pretty(pg_total_relation_size(?)) AS total_size, pg_size_pretty(pg_indexes_size(?)) AS index_size FROM pg_class WHERE relname = ?";
             case "MYSQL" -> "SELECT TABLE_ROWS AS row_count, ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 1) AS total_size_mb, ROUND(INDEX_LENGTH / 1024 / 1024, 1) AS index_size_mb FROM information_schema.tables WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()";
-            case "SQLITE" -> "SELECT COUNT(*) AS row_count, 'N/A' AS total_size FROM " + tableName;
-            case "ORACLE" -> "SELECT COUNT(*) AS \"row_count\", COALESCE((SELECT SUM(bytes) FROM user_segments WHERE segment_name = ?), 0) AS \"total_size\" FROM " + tableName;
+            case "SQLITE" -> "SELECT COUNT(*) AS row_count, 'N/A' AS total_size FROM " + effectiveTableName;
+            case "ORACLE" -> "SELECT (SELECT COUNT(*) FROM " + effectiveTableName + ") AS \"row_count\", (SELECT NVL(SUM(bytes), 0) FROM user_segments WHERE segment_name = '" + effectiveTableName + "') AS \"total_size\" FROM DUAL";
             default -> throw new IllegalArgumentException("Unsupported DB type");
         };
         if (config.getDbType().equals("POSTGRESQL")) {
             return jdbc.queryForMap(sql, tableName, tableName, tableName);
         }
-        return jdbc.queryForMap(sql, tableName);
+        if (config.getDbType().equals("ORACLE")) {
+            return jdbc.queryForMap(sql);
+        }
+        return jdbc.queryForMap(sql, effectiveTableName);
     }
 
     @GetMapping("/tables/{tableName}/foreign-keys")
@@ -140,8 +153,14 @@ public class SchemaController {
         List<Map<String, Object>> fks = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
             var meta = conn.getMetaData();
-            String schema = config.getDbType().equals("POSTGRESQL") ? "public" : null;
-            try (var rs = meta.getImportedKeys(null, schema, tableName)) {
+            String schema = switch (config.getDbType()) {
+                case "POSTGRESQL" -> "public";
+                case "ORACLE" -> config.getUsername().toUpperCase();
+                default -> null;
+            };
+            // Oracle stores identifiers in uppercase by default
+            String effectiveTableName = config.getDbType().equals("ORACLE") ? tableName.toUpperCase() : tableName;
+            try (var rs = meta.getImportedKeys(null, schema, effectiveTableName)) {
                 while (rs.next()) {
                     Map<String, Object> fk = new LinkedHashMap<>();
                     fk.put("pk_table", rs.getString("PKTABLE_NAME"));

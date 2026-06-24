@@ -25,16 +25,16 @@
            </h1>
         </div>
         <div class="flex gap-sm">
-           <button @click="refresh" :disabled="loading" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface disabled:opacity-50">
+           <button @click="refresh" :disabled="loading" class="bg-surface-container border border-subtle px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium btn-transition hover:bg-surface-container-high text-on-surface disabled:opacity-50">
               <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-spin': loading }">refresh</span>
               <span>{{ loading ? 'Loading...' : 'Refresh' }}</span>
            </button>
-           <button @click="exportCSV" :disabled="!previewData.length" class="bg-surface-container border border-outline-variant px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium hover:bg-surface-container-high transition-colors text-on-surface disabled:opacity-50 min-w-[90px] justify-center">
+           <button @click="exportCSV" :disabled="!previewData.length" class="bg-surface-container border border-subtle px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-medium btn-transition hover:bg-surface-container-high text-on-surface disabled:opacity-50 min-w-[90px] justify-center">
               <span class="material-symbols-outlined text-[18px]" :class="{ 'animate-bounce': exporting }">{{ exporting ? 'downloading' : 'download' }}</span>
               <span>{{ exporting ? 'Downloading' : 'Export' }}</span>
            </button>
            <button @click="queryTable"
-  class="bg-primary text-on-primary px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-bold shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
+  class="bg-primary text-on-primary px-md py-1.5 rounded flex items-center gap-xs text-body-sm font-bold btn-transition hover:opacity-90 active:scale-[0.98]">
               <span class="material-symbols-outlined text-[18px]">play_arrow</span>
               Query Table
            </button>
@@ -66,7 +66,7 @@
        <div v-else class="grid grid-cols-12 gap-md h-fit max-w-[1400px] mx-auto">
 
          <!-- Columns/Schema Definition Panel -->
-         <div v-if="currentTab === 'schema'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col min-h-[400px]">
+         <div v-if="currentTab === 'schema'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-subtle rounded-xl overflow-hidden flex flex-col min-h-[400px]">
            <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
               <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Columns</h3>
               <div class="flex items-center gap-sm">
@@ -109,7 +109,7 @@
          <div class="col-span-12 lg:col-span-4 flex flex-col gap-md">
 
            <!-- Table Insights -->
-           <div class="bg-surface-container-low border border-outline-variant rounded-xl p-md">
+           <div class="bg-surface-container-low border border-subtle rounded-xl p-md">
              <h3 class="font-headline-md text-[16px] font-bold text-on-surface mb-md flex items-center gap-xs">
                 <span class="material-symbols-outlined text-outline text-[20px]">analytics</span>
                 Table Insights
@@ -138,7 +138,7 @@
            </div>
 
            <!-- Activity Log -->
-           <div class="bg-surface-container-low border border-outline-variant rounded-xl p-md flex-1 overflow-hidden flex flex-col">
+           <div class="bg-surface-container-low border border-subtle rounded-xl p-md flex-1 overflow-hidden flex flex-col">
               <h3 class="font-headline-md text-[16px] font-bold text-on-surface mb-md flex items-center gap-xs shrink-0">
                  <span class="material-symbols-outlined text-outline text-[20px]">history</span>
                  Activity Log
@@ -156,7 +156,7 @@
          </div>
 
          <!-- Data Preview Section Layout -->
-         <div v-if="currentTab === 'data'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+         <div v-if="currentTab === 'data'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-subtle rounded-xl overflow-hidden">
             <div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface flex-wrap gap-2">
                <h3 class="font-headline-md text-[18px] font-bold text-on-surface flex items-center gap-xs">
                   <span class="material-symbols-outlined text-outline">table_rows</span>
@@ -204,7 +204,7 @@
          </div>
 
          <!-- Relationships Tab -->
-         <div v-if="currentTab === 'relationships'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+         <div v-if="currentTab === 'relationships'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-subtle rounded-xl overflow-hidden">
            <div class="p-md border-b border-outline-variant bg-surface">
              <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Foreign Keys</h3>
            </div>
@@ -232,7 +232,7 @@
          </div>
 
          <!-- Change Log Tab -->
-         <div v-if="currentTab === 'changelog'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+         <div v-if="currentTab === 'changelog'" class="col-span-12 lg:col-span-8 bg-surface-container-low border border-subtle rounded-xl overflow-hidden">
            <div class="p-md border-b border-outline-variant bg-surface">
              <h3 class="font-headline-md text-[18px] font-bold text-on-surface">Recent Queries on {{ selectedTable }}</h3>
            </div>

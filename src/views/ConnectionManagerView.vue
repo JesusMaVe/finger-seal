@@ -10,7 +10,7 @@
       </div>
 
       <!-- Main Form Card -->
-      <section class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg shadow-black/5 overflow-hidden flex flex-col md:flex-row hover-lift">
+      <section class="w-full bg-surface-container-lowest border border-subtle rounded-xl overflow-hidden flex flex-col md:flex-row hover-lift">
 
         <!-- Left Sidebar Type List -->
         <div class="w-full md:w-1/3 bg-surface-container-low border-r border-outline-variant p-lg flex flex-col gap-md shrink-0">
@@ -125,14 +125,14 @@
 
           <div class="mt-auto pt-lg border-t border-outline-variant flex items-center justify-between">
              <button @click="testConnection" :disabled="testing"
-              class="flex items-center gap-sm px-md py-sm border border-outline-variant rounded font-medium text-on-surface font-body-md hover:bg-surface transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+              class="flex items-center gap-sm px-md py-sm border border-outline-variant rounded font-medium text-on-surface font-body-md btn-transition hover:bg-surface-container active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
               <span class="material-symbols-outlined text-outline">network_check</span>
               {{ testing ? 'Testing...' : 'Test Connection' }}
             </button>
             <div class="flex gap-md">
-               <button class="text-on-surface-variant hover:text-on-surface font-bold text-body-md transition-colors px-md">Cancel</button>
+               <button class="text-on-surface-variant hover:text-on-surface btn-transition font-medium text-body-md px-md">Cancel</button>
                <button @click="saveConnection" :disabled="saving"
-                class="bg-primary text-on-primary px-lg py-sm rounded border border-transparent font-bold text-body-md hover:opacity-90 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                class="bg-primary text-on-primary px-lg py-sm rounded btn-transition font-bold text-body-md hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
                 {{ saving ? 'Saving...' : 'Connect' }}
               </button>
             </div>
@@ -141,7 +141,7 @@
       </section>
 
       <!-- Saved Connections List -->
-      <section v-if="connections.length > 0" class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+      <section v-if="connections.length > 0" class="w-full bg-surface-container-lowest border border-subtle rounded-xl overflow-hidden">
         <div class="p-md border-b border-outline-variant">
           <h3 class="font-headline-md text-[16px] font-bold text-on-surface">Saved Connections</h3>
         </div>

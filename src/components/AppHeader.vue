@@ -6,14 +6,14 @@
     <div class="flex items-center gap-md">
       <nav class="hidden md:flex gap-md items-center">
         <a href="#" @click.prevent="activeView = 'queries'"
-          class="font-body-md text-body-md transition-colors px-sm py-1 rounded"
-          :class="activeView === 'queries' ? 'text-primary font-bold bg-primary-container/20' : 'text-on-surface-variant hover:text-primary'">Query</a>
+          class="font-body-md text-body-md btn-transition px-sm py-1 rounded"
+          :class="activeView === 'queries' ? 'bg-secondary-container text-on-secondary-container font-semibold' : 'text-on-surface-variant hover:text-on-surface'">Query</a>
         <a href="#" @click.prevent="activeView = 'tables'"
-          class="font-body-md text-body-md transition-colors px-sm py-1 rounded"
-          :class="activeView === 'tables' ? 'text-primary font-bold bg-primary-container/20' : 'text-on-surface-variant hover:text-primary'">Schema</a>
+          class="font-body-md text-body-md btn-transition px-sm py-1 rounded"
+          :class="activeView === 'tables' ? 'bg-secondary-container text-on-secondary-container font-semibold' : 'text-on-surface-variant hover:text-on-surface'">Schema</a>
         <a href="#" @click.prevent="activeView = 'dashboard'"
-          class="font-body-md text-body-md transition-colors px-sm py-1 rounded"
-          :class="activeView === 'dashboard' ? 'text-primary font-bold bg-primary-container/20' : 'text-on-surface-variant hover:text-primary'">Logs</a>
+          class="font-body-md text-body-md btn-transition px-sm py-1 rounded"
+          :class="activeView === 'dashboard' ? 'bg-secondary-container text-on-secondary-container font-semibold' : 'text-on-surface-variant hover:text-on-surface'">Logs</a>
       </nav>
     </div>
   </header>
