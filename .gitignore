@@ -12,6 +12,10 @@ build/
 src-tauri/target/
 src-tauri/gen/schemas
 
+# Playwright test artifacts
+test-results/
+playwright-report/
+
 # Environment
 .env
 .env.local
