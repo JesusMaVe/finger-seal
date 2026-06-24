@@ -42,6 +42,8 @@ dependencies {
 
     // Micrometer metrics
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    runtimeOnly 'io.opentelemetry:opentelemetry-exporter-otlp'
 
     // SQL parsing (linter)
     implementation 'com.github.jsqlparser:jsqlparser:5.1'
