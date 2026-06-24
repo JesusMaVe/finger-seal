@@ -1,41 +1,27 @@
-version: "3.9"
-
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:file:/data/dataforge;DB_CLOSE_ON_EXIT=FALSE
+      - APP_ENCRYPTION_KEY=${APP_ENCRYPTION_KEY:-CHANGEME}
+    volumes:
+      - dataforge-data:/data
+
   postgres:
     image: postgres:16-alpine
-    container_name: df-postgres
-    environment:
-      POSTGRES_DB: testdb
-      POSTGRES_USER: testuser
-      POSTGRES_PASSWORD: testpass
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  mysql:
-    image: mysql:8.4
-    container_name: df-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: testdb
-      MYSQL_USER: testuser
-      MYSQL_PASSWORD: testpass
-    ports:
-      - "3306:3306"
+      POSTGRES_DB: fingerseal
+      POSTGRES_USER: fingerseal
+      POSTGRES_PASSWORD: fingerseal
     volumes:
-      - mysqldata:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      - pg-data:/var/lib/postgresql/data
 
 volumes:
-  pgdata:
-  mysqldata:
+  dataforge-data:
+  pg-data:
