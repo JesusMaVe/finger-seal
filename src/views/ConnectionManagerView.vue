@@ -119,6 +119,8 @@
             </div>
           </div>
 
+          <SshTunnelForm v-model="sshConfig" class="mb-md" />
+
           <!-- Status messages -->
           <div v-if="error" class="px-md py-sm bg-error-container text-on-error-container rounded-sm text-body-sm font-medium">{{ error }}</div>
           <div v-if="success" class="px-md py-sm bg-primary-container/20 text-primary rounded-sm text-body-sm font-medium">{{ success }}</div>
@@ -170,6 +172,7 @@ const { connections } = storeToRefs(useAppStore())
 const { loadConnections } = useAppStore()
 import { connectionsApi, type ConnectionConfig } from '@/api/connections'
 import { savePassword, getPassword, deletePassword } from '@/tauri/credentials'
+import SshTunnelForm from '@/components/SshTunnelForm.vue'
 
 const form = ref<ConnectionConfig>({
   name: '',
@@ -179,6 +182,15 @@ const form = ref<ConnectionConfig>({
   database: '',
   username: '',
   password: '',
+})
+
+const sshConfig = ref({
+  useSshTunnel: false,
+  sshHost: '',
+  sshPort: 22,
+  sshUser: '',
+  sshPassword: '',
+  sshPrivateKeyPath: '',
 })
 
 const testing = ref(false)
@@ -208,7 +220,8 @@ async function saveConnection() {
   error.value = ''
   success.value = ''
   try {
-    const conn = await connectionsApi.create(form.value)
+    const payload = { ...form.value, ...sshConfig.value }
+    const conn = await connectionsApi.create(payload as ConnectionConfig)
     if (conn.id && form.value.password) {
       await savePassword(conn.id, form.value.password)
     }

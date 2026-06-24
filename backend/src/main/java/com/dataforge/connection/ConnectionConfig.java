@@ -15,6 +15,12 @@ public class ConnectionConfig {
     private String database;
     private String username;
     private String password;
+    private boolean useSshTunnel;
+    private String sshHost;
+    private int sshPort = 22;
+    private String sshUser;
+    private String sshPassword;
+    private String sshPrivateKeyPath;
 
     public ConnectionConfig() {}
 
@@ -44,4 +50,17 @@ public class ConnectionConfig {
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public boolean isUseSshTunnel() { return useSshTunnel; }
+    public void setUseSshTunnel(boolean useSshTunnel) { this.useSshTunnel = useSshTunnel; }
+    public String getSshHost() { return sshHost; }
+    public void setSshHost(String sshHost) { this.sshHost = sshHost; }
+    public int getSshPort() { return sshPort; }
+    public void setSshPort(int sshPort) { this.sshPort = sshPort; }
+    public String getSshUser() { return sshUser; }
+    public void setSshUser(String sshUser) { this.sshUser = sshUser; }
+    public String getSshPassword() { return sshPassword; }
+    public void setSshPassword(String sshPassword) { this.sshPassword = sshPassword; }
+    public String getSshPrivateKeyPath() { return sshPrivateKeyPath; }
+    public void setSshPrivateKeyPath(String sshPrivateKeyPath) { this.sshPrivateKeyPath = sshPrivateKeyPath; }
 }

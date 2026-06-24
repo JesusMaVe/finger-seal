@@ -37,5 +37,8 @@ dependencies {
     // SQL parsing (linter)
     implementation 'com.github.jsqlparser:jsqlparser:5.1'
 
+    // SSH tunneling
+    implementation 'com.github.mwiede:jsch:0.2.21'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

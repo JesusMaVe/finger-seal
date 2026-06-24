@@ -1,6 +1,7 @@
 package com.dataforge.query;
 
 import com.dataforge.connection.ConnectionConfig;
+import com.dataforge.connection.SshTunnelService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DataSourceManager {
 
     private final Map<Long, HikariDataSource> pools = new ConcurrentHashMap<>();
+    private final SshTunnelService sshTunnelService;
+
+    public DataSourceManager(SshTunnelService sshTunnelService) {
+        this.sshTunnelService = sshTunnelService;
+    }
 
     public DataSource getOrCreate(ConnectionConfig config) {
         return pools.computeIfAbsent(config.getId(), id -> createDataSource(config));
@@ -20,7 +26,15 @@ public class DataSourceManager {
 
     public HikariDataSource createDataSource(ConnectionConfig config) {
         HikariConfig hikari = new HikariConfig();
-        String url = buildJdbcUrl(config);
+
+        int dbPort = config.getPort();
+        String dbHost = config.getHost();
+        if (config.isUseSshTunnel()) {
+            dbPort = sshTunnelService.openTunnel(config.getId(), config);
+            dbHost = "localhost";
+        }
+
+        String url = buildJdbcUrl(config, dbHost, dbPort);
         hikari.setJdbcUrl(url);
         hikari.setUsername(config.getUsername());
         hikari.setPassword(config.getPassword());
@@ -48,15 +62,19 @@ public class DataSourceManager {
     }
 
     private String buildJdbcUrl(ConnectionConfig c) {
+        return buildJdbcUrl(c, c.getHost(), c.getPort());
+    }
+
+    private String buildJdbcUrl(ConnectionConfig c, String host, int port) {
         // ponytail: accept raw JDBC URL in database field (e.g. for tests)
         if (c.getDatabase() != null && c.getDatabase().startsWith("jdbc:")) {
             return c.getDatabase();
         }
         return switch (c.getDbType()) {
-            case "POSTGRESQL" -> "jdbc:postgresql://" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
-            case "MYSQL" -> "jdbc:mysql://" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
+            case "POSTGRESQL" -> "jdbc:postgresql://" + host + ":" + port + "/" + c.getDatabase();
+            case "MYSQL" -> "jdbc:mysql://" + host + ":" + port + "/" + c.getDatabase();
             case "SQLITE" -> "jdbc:sqlite:" + c.getDatabase();
-            case "ORACLE" -> "jdbc:oracle:thin:@//" + c.getHost() + ":" + c.getPort() + "/" + c.getDatabase();
+            case "ORACLE" -> "jdbc:oracle:thin:@//" + host + ":" + port + "/" + c.getDatabase();
             default -> throw new IllegalArgumentException("Unsupported DB type: " + c.getDbType());
         };
     }

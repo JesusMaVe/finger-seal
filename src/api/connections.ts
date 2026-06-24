@@ -9,6 +9,12 @@ export interface ConnectionConfig {
   database: string;
   username: string;
   password: string;
+  useSshTunnel?: boolean;
+  sshHost?: string;
+  sshPort?: number;
+  sshUser?: string;
+  sshPassword?: string;
+  sshPrivateKeyPath?: string;
 }
 
 export const connectionsApi = {
