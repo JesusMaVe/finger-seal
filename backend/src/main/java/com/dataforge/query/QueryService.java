@@ -5,6 +5,8 @@ import com.dataforge.connection.ConnectionRepository;
 import com.dataforge.ws.EventPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.Span;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
@@ -24,8 +26,9 @@ public class QueryService {
     private final EventPublisher eventPublisher;
     private final MeterRegistry meterRegistry;
     private final Timer queryTimer;
+    private final Tracer tracer;
 
-    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo, EventPublisher eventPublisher, MeterRegistry meterRegistry) {
+    public QueryService(ConnectionRepository connectionRepo, DataSourceManager dataSourceManager, QueryHistoryRepository historyRepo, EventPublisher eventPublisher, MeterRegistry meterRegistry, Tracer tracer) {
         this.connectionRepo = connectionRepo;
         this.dataSourceManager = dataSourceManager;
         this.historyRepo = historyRepo;
@@ -34,58 +37,68 @@ public class QueryService {
         this.queryTimer = Timer.builder("query.execution")
             .description("Query execution time")
             .register(meterRegistry);
+        this.tracer = tracer;
     }
 
     public QueryResult execute(QueryRequest request) {
-        long start = System.currentTimeMillis();
-        ConnectionConfig config = connectionRepo.findById(request.getConnectionId())
-                .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + request.getConnectionId()));
+        Span span = tracer.nextSpan().name("query.execute").start();
+        try (var ws = tracer.withSpan(span)) {
+            span.tag("connection.id", String.valueOf(request.getConnectionId()));
+            span.tag("sql.length", String.valueOf(request.getSql() != null ? request.getSql().length() : 0));
 
-        DataSource ds = dataSourceManager.getOrCreate(config);
-        JdbcTemplate jdbc = new JdbcTemplate(ds);
+            long start = System.currentTimeMillis();
+            ConnectionConfig config = connectionRepo.findById(request.getConnectionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Connection not found: " + request.getConnectionId()));
 
-        try {
-            String rawSql = request.getSql().trim();
-            // ponytail: strip trailing semicolons (JDBC doesn't accept them)
-            while (rawSql.endsWith(";")) rawSql = rawSql.substring(0, rawSql.length() - 1).trim();
-            String sql = rawSql.toUpperCase();
-            QueryResult result;
-            if (sql.startsWith("SELECT") || sql.startsWith("WITH") || sql.startsWith("EXPLAIN") || sql.startsWith("DESCRIBE") || sql.startsWith("SHOW")) {
-                result = executeQuery(jdbc, rawSql, start);
-            } else {
-                result = executeUpdate(jdbc, rawSql, start);
+            DataSource ds = dataSourceManager.getOrCreate(config);
+            JdbcTemplate jdbc = new JdbcTemplate(ds);
+
+            try {
+                String rawSql = request.getSql().trim();
+                // ponytail: strip trailing semicolons (JDBC doesn't accept them)
+                while (rawSql.endsWith(";")) rawSql = rawSql.substring(0, rawSql.length() - 1).trim();
+                String sql = rawSql.toUpperCase();
+                QueryResult result;
+                if (sql.startsWith("SELECT") || sql.startsWith("WITH") || sql.startsWith("EXPLAIN") || sql.startsWith("DESCRIBE") || sql.startsWith("SHOW")) {
+                    result = executeQuery(jdbc, rawSql, start);
+                } else {
+                    result = executeUpdate(jdbc, rawSql, start);
+                }
+                historyRepo.save(new QueryHistory(
+                    request.getConnectionId(), request.getSql(), "SUCCESS",
+                    result.getElapsedMs(),
+                    result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
+                    null
+                ));
+                eventPublisher.queryExecuted(
+                    request.getConnectionId(), request.getSql(),
+                    "SUCCESS",
+                    result.getElapsedMs(),
+                    result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
+                    null
+                );
+                queryTimer.record(System.currentTimeMillis() - start, java.util.concurrent.TimeUnit.MILLISECONDS);
+                span.end();
+                return result;
+            } catch (Exception e) {
+                span.error(e);
+                long elapsed = System.currentTimeMillis() - start;
+                QueryResult result = new QueryResult(e.getMessage(), elapsed);
+                historyRepo.save(new QueryHistory(
+                    request.getConnectionId(), request.getSql(), "ERROR",
+                    elapsed, null, e.getMessage()
+                ));
+                eventPublisher.queryExecuted(
+                    request.getConnectionId(), request.getSql(),
+                    "ERROR",
+                    elapsed,
+                    null,
+                    e.getMessage()
+                );
+                queryTimer.record(System.currentTimeMillis() - start, java.util.concurrent.TimeUnit.MILLISECONDS);
+                span.end();
+                return result;
             }
-            historyRepo.save(new QueryHistory(
-                request.getConnectionId(), request.getSql(), "SUCCESS",
-                result.getElapsedMs(),
-                result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
-                null
-            ));
-            eventPublisher.queryExecuted(
-                request.getConnectionId(), request.getSql(),
-                "SUCCESS",
-                result.getElapsedMs(),
-                result.getRows() != null ? result.getRows().size() : result.getAffectedRows(),
-                null
-            );
-            queryTimer.record(System.currentTimeMillis() - start, java.util.concurrent.TimeUnit.MILLISECONDS);
-            return result;
-        } catch (Exception e) {
-            long elapsed = System.currentTimeMillis() - start;
-            QueryResult result = new QueryResult(e.getMessage(), elapsed);
-            historyRepo.save(new QueryHistory(
-                request.getConnectionId(), request.getSql(), "ERROR",
-                elapsed, null, e.getMessage()
-            ));
-            eventPublisher.queryExecuted(
-                request.getConnectionId(), request.getSql(),
-                "ERROR",
-                elapsed,
-                null,
-                e.getMessage()
-            );
-            queryTimer.record(System.currentTimeMillis() - start, java.util.concurrent.TimeUnit.MILLISECONDS);
-            return result;
         }
     }
 
