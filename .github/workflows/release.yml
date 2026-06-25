@@ -84,6 +84,7 @@ jobs:
 
       - name: Fetch Rust dependencies (retry)
         working-directory: src-tauri
+        shell: bash
         run: |
           for i in 1 2 3; do
             cargo fetch && break || sleep $((i*5))
