@@ -8,11 +8,6 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => {
   return {
     plugins: [vue(), tailwindcss()],
-    build: {
-      rollupOptions: {
-        external: [/@tauri-apps\//],
-      },
-    },
     clearScreen: false,
     resolve: {
       alias: {
