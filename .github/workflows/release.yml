@@ -61,6 +61,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
 
       # Linux dependencies for tauri
@@ -81,9 +82,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Fetch Rust dependencies (retry)
+        working-directory: src-tauri
+        run: |
+          for i in 1 2 3; do
+            cargo fetch && break || sleep $((i*5))
+          done
+
       - name: Build Tauri app
         run: npm run tauri build
         env:
+          CARGO_HTTP_MULTIPLEXING: "false"
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
