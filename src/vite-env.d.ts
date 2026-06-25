@@ -4,3 +4,10 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+// Tauri v2 runtime bridge — available only inside a Tauri webview
+declare global {
+  interface Window {
+    __TAURI_INTERNALS__?: Record<string, unknown>
+  }
+}
