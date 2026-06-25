@@ -143,10 +143,7 @@ jobs:
             - **Windows**: `Finger_Seal_${{ github.ref_name }}_x64.msi`
             - **Linux**: `Finger_Seal_${{ github.ref_name }}_amd64.deb` / `.AppImage`
 
-            ### Checksums
-            ```
-            ${{ steps.checksums.outputs.CHECKSUMS }}
-            ```
+            Los checksums están en `checksums.txt` (adjunto al release).
           files: |
             *.dmg
             *.deb
