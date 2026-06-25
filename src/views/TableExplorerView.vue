@@ -280,7 +280,8 @@
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { schemasApi, type ColumnInfo } from '@/api/schemas'
 import { queryApi } from '@/api/query'
-import { exportApi } from '@/api/export'
+import { exportApi } from '@/api/client'
+import { escapeCsv, downloadBlob } from '@/utils/export'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/store/app'
 const appStore = useAppStore()
@@ -403,13 +404,7 @@ function exportCSV() {
       ...rows.map(r => cols.map(c => escapeCsv(String(r[c] ?? ''))).join(',')),
     ].join('\n')
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.csv`)
 
     exporting.value = false
     toastMsg.value = `${selectedTable.value}.csv downloaded`
@@ -421,25 +416,13 @@ async function exportXLSX() {
   if (!selectedConnectionId.value || !selectedTable.value) return
   try {
     const blob = await exportApi.xlsx(selectedConnectionId.value, `SELECT * FROM ${selectedTable.value}`)
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.xlsx`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(blob, `${selectedTable.value}_${new Date().toISOString().slice(0, 10)}.xlsx`)
     toastMsg.value = `${selectedTable.value}.xlsx downloaded`
     setTimeout(() => { toastMsg.value = '' }, 3000)
   } catch (e: any) {
     toastMsg.value = `Export failed: ${e.message}`
     setTimeout(() => { toastMsg.value = '' }, 3000)
   }
-}
-
-function escapeCsv(val: string): string {
-  if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-    return `"${val.replace(/"/g, '""')}"`
-  }
-  return val
 }
 
 function formatTimestamp(ts: string): string {

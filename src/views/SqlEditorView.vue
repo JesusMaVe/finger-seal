@@ -151,12 +151,13 @@ import { bracketMatching, foldGutter, indentOnInput, syntaxHighlighting, default
 import { closeBrackets, closeBracketsKeymap, autocompletion, completionKeymap, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete'
 import { linter, type Diagnostic } from '@codemirror/lint'
 import { sql, PostgreSQL, MySQL, SQLite, StandardSQL, type SQLDialect } from '@codemirror/lang-sql'
-import { queryApi, type QueryResult, type QueryHistoryEntry } from '@/api/query'
+import { queryApi, streamQuery, type QueryResult, type QueryHistoryEntry, type StreamEvent } from '@/api/query'
 import { editorApi, type LintIssue, type SchemaSuggestion } from '@/api/editor'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/store/app'
-import { exportApi } from '@/api/export'
-import { streamQuery, type StreamEvent } from '@/api/stream'
+import { exportApi } from '@/api/client'
+import { escapeCsv, downloadBlob } from '@/utils/export'
+import { isDdl } from '@/utils/ddl'
 const appStore = useAppStore()
 const { connections, selectedConnectionId, pendingQuery, currentSql } = storeToRefs(appStore)
 const { loadConnections, bumpSchema } = appStore
@@ -587,8 +588,6 @@ watch(selectedConnectionId, async (id) => {
   } catch { queryHistory.value = [] }
 }, { immediate: true })
 
-const DDL_RE = /^\s*(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b/i
-
 async function runQuery() {
   if (!selectedConnectionId.value || !currentSql.value.trim()) return
   running.value = true
@@ -633,7 +632,7 @@ async function runQuery() {
 
   try {
     results.value = await queryApi.execute(selectedConnectionId.value, currentSql.value)
-    if (DDL_RE.test(currentSql.value)) bumpSchema()
+    if (isDdl(currentSql.value)) bumpSchema()
   } catch (e: any) {
     results.value = { error: e.message, elapsedMs: 0 }
   } finally {
@@ -705,14 +704,7 @@ async function exportBackendCsv() {
   }
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+
 
 function dateStr() {
   return new Date().toISOString().slice(0, 10)
@@ -764,12 +756,7 @@ async function exportBackendJson() {
 async function exportCsv() {
   if (!results.value?.columns || !results.value?.rows) return
   const cols = results.value.columns
-  const rows = results.value.rows.map((r: any) => cols.map(c => {
-    const v = r[c]
-    if (v == null) return ''
-    const s = String(v)
-    return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s
-  }).join(','))
+  const rows = results.value.rows.map((r: any) => cols.map(c => escapeCsv(String(r[c] ?? ''))).join(','))
   const csv = [cols.join(','), ...rows].join('\n')
   if ('showSaveFilePicker' in window) {
     const handle = await (window as any).showSaveFilePicker({
@@ -780,13 +767,7 @@ async function exportCsv() {
     await writable.write(csv)
     await writable.close()
   } else {
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv'
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(new Blob([csv], { type: 'text/csv' }), 'query_results_' + new Date().toISOString().slice(0, 10) + '.csv')
   }
   toastMsg.value = 'CSV downloaded'
   setTimeout(() => { toastMsg.value = '' }, 3000)

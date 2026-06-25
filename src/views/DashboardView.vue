@@ -174,8 +174,10 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/store/app'
+import { useQueryEvents } from '@/composables/useQueryEvents'
 const appStore = useAppStore()
-const { connections, selectedConnectionId, wsConnected, wsLogs } = storeToRefs(appStore)
+const { connections, selectedConnectionId } = storeToRefs(appStore)
+const { wsConnected, wsLogs } = useQueryEvents()
 import { schemasApi } from '@/api/schemas'
 
 const metrics = ref<Record<string, any>>({})

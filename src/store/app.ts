@@ -1,21 +1,10 @@
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import type { ConnectionConfig } from '@/api/connections'
 import { connectionsApi } from '@/api/connections'
 
 export type ViewName = 'dashboard' | 'connections' | 'tables' | 'queries'
 export type Theme = 'system' | 'light' | 'dark'
-
-export interface QueryEvent {
-  type: 'query'
-  connectionId: number
-  sql: string
-  status: string
-  elapsedMs: number
-  rows: number | null
-  error: string | null
-  timestamp: number
-}
 
 export const useAppStore = defineStore('app', () => {
   const activeView = ref<ViewName>('queries')
@@ -58,35 +47,6 @@ export const useAppStore = defineStore('app', () => {
     } catch { /* noop */ }
   }
 
-  /* ── WebSocket event bus (persists across view switches) ── */
-  const wsConnected = ref(false)
-  const wsLogs = ref<QueryEvent[]>([])
-
-  const wsUrl = window.location.port === '3000'
-    ? `ws://${window.location.host}/ws/events`
-    : `ws://localhost:8080/ws/events`
-  let ws: WebSocket | null = null
-
-  function connectWs() {
-    try {
-      ws = new WebSocket(wsUrl)
-      ws.onopen = () => { wsConnected.value = true }
-      ws.onclose = () => { wsConnected.value = false }
-      ws.onerror = () => { wsConnected.value = false }
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data) as QueryEvent
-          if (data.type === 'query') {
-            wsLogs.value.unshift(data)
-            if (wsLogs.value.length > 50) wsLogs.value.pop()
-          }
-        } catch { /* noop */ }
-      }
-    } catch { /* noop */ }
-  }
-
-  connectWs()
-
   return {
     activeView,
     theme,
@@ -100,7 +60,5 @@ export const useAppStore = defineStore('app', () => {
     bumpSchema,
     connections,
     loadConnections,
-    wsConnected,
-    wsLogs,
   }
 })
