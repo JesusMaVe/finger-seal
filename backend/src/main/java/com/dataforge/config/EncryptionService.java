@@ -18,7 +18,7 @@ public class EncryptionService {
     private final SecretKey key;
 
     public EncryptionService(@Value("${app.encryption.key}") String base64Key) {
-        byte[] decoded = Base64.getDecoder().decode(base64Key);
+        byte[] decoded = Base64.getDecoder().decode(base64Key.replace('-', '+').replace('_', '/'));
         this.key = new SecretKeySpec(decoded, "AES");
     }
 

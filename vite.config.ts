@@ -27,6 +27,7 @@ export default defineConfig(() => {
       },
       watch: {
         ignored: ['**/src-tauri/**'],
+        followSymlinks: false,
       },
     },
   };

@@ -127,38 +127,47 @@ Pre-configured dashboard: **Finger Seal — Query Performance**
 
 Docs: `docs/superpowers/observability-setup.md`
 
+## Prerequisites
+
+- **Java 21+** (JDK) — el backend usa Gradle con toolchain automática
+- **Node.js 20+** — para el frontend Vite + Vue
+- **Docker** — para levantar la base de datos PostgreSQL de desarrollo
+- **Bun** (opcional) — el proyecto tiene `bun.lock`, funciona con `bun` o `npm`
+
 ## Development
 
 ```bash
-# Install dependencies
+# 1. Install frontend dependencies
 npm install
+# o con bun: bun install
 
-# Start dev databases (PostgreSQL)
+# 2. Start PostgreSQL de desarrollo (puerto 5432)
 docker compose -f docker-compose.dev.yml up -d
 
-# Set encryption key (generate with: openssl rand -base64 32)
-export APP_ENCRYPTION_KEY="your-32-byte-base64-key"
+# 3. (Opcional) Clave de encriptación personalizada
+#    Por defecto usa la clave incluida en application.yml.
+#    Solo si quieres una distinta:
+# export APP_ENCRYPTION_KEY="$(openssl rand -base64 32)"
 
-# Start backend
+# 4. Iniciar backend (Spring Boot en :8080)
 cd backend && ./gradlew bootRun
 
-# Dev server (browser)
+# 5. En otra terminal — dev server del frontend (Vite en :3000)
 npm run dev
-
-# Desktop app (Tauri window)
-npm run tauri dev
+# Abre http://localhost:3000 en el navegador
 
 # Type check
 npm run lint
 
-# E2E smoke tests (requires dev server running on :3000)
-npm run test:e2e
-
-# Production build (frontend only)
+# Compilar frontend para producción
 npm run build
 
-# Desktop build (native binary)
-npm run tauri build
+# (Opcional) Desktop app con Tauri
+npm run tauri dev       # desarrollo
+npm run tauri build     # binario nativo
+
+# (Opcional) E2E smoke tests (requiere dev server en :3000)
+npm run test:e2e
 ```
 
 ## Test Databases
@@ -175,7 +184,12 @@ Connection config for the app:
 
 ## Environment
 
-Copy `.env.example` to `.env` and add your `GEMINI_API_KEY` if AI features are needed.
+No `.env` file es necesario para desarrollo básico. Si usas features de AI (Gemini), copia el archivo de ejemplo y agrega tu `GEMINI_API_KEY`:
+
+```bash
+cp .env.example .env
+# editar .env con tu GEMINI_API_KEY
+```
 
 ## Docs
 
