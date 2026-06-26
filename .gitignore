@@ -57,6 +57,14 @@ backend/data/
 *.jar
 *.war
 
+# Teaching / learning workspace
+lessons/
+assets/
+learning-records/
+MISSION.md
+RESOURCES.md
+NOTES.md
+
 # Misc
 .cache/
 tmp/
